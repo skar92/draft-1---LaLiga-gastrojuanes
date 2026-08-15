@@ -795,7 +795,7 @@ html_pesca_template = """
         return Math.random() < 0.5 ? val : -val;
     }
 
-    let angleSpeed = getRandomSpeed(0.01, 0.011);
+    let angleSpeed = getRandomSpeed(0.005, 0.005);
     let fixedAngle = 0; let chargeForce = 0;
     
     let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
