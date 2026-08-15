@@ -75,16 +75,16 @@ stats_equipos = {
 }
 
 porra_goleadores = {
-    "Borja Iglesias": {"Jugador": "Ejkar", "Goles": 0},
-    "Lookman": {"Jugador": "Sierra", "Goles": 0},
-    "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
-    "Budimir": {"Jugador": "Mírete", "Goles": 0},
-    "Mikautadze": {"Jugador": "Miguel Ángel", "Goles": 0},
-    "Mikel Oyarzabal": {"Jugador": "Juan", "Goles": 0},
-    "Julián Álvarez": {"Jugador": "Joaquín", "Goles": 0},
-    "Sørloth": {"Jugador": "Joaquín", "Goles": 0},
-    "Enes Unal": {"Jugador": "Telenti", "Goles": 0},
-    "Hugo Duro": {"Jugador": "Telenti", "Goles": 0},
+    "Borja Iglesias": {"Equipo": None , "Jugador": "Ejkar", "Goles": 0},
+    "Lookman": {"Equipo": None ,"Jugador": "Sierra", "Goles": 0},
+    "Aubameyang": {"Equipo": None , "Jugador": "Vecina", "Goles": 0},
+    "Budimir": {"Equipo": None , "Jugador": "Mírete", "Goles": 0},
+    "Mikautadze": {"Equipo": None , "Jugador": "Miguel Ángel", "Goles": 0},
+    "Mikel Oyarzabal": {"Equipo": None , "Jugador": "Juan", "Goles": 0},
+    "Julián Álvarez": {"Equipo": None , "Jugador": "Joaquín", "Goles": 0},
+    "Sørloth": {"Equipo": None , "Jugador": "Joaquín", "Goles": 0},
+    "Enes Unal": {"Equipo": None , "Jugador": "Telenti", "Goles": 0},
+    "Hugo Duro": {"Equipo": None , "Jugador": "Telenti", "Goles": 0},
     
 }
 
