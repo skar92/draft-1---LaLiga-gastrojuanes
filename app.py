@@ -201,13 +201,30 @@ max_pts = df_general["Total_Num"].max()
 fig_barras.update_layout(showlegend=False, xaxis_title="Participante", yaxis_title="Puntos Totales", yaxis=dict(range=[0, max_pts + 5 if max_pts > 0 else 10]))
 st.plotly_chart(fig_barras, use_container_width=True)
 
+
+
+
+import os
+import base64
+import streamlit as st
+import streamlit.components.v1 as components
+
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
 # ==============================================================================
 st.markdown("---")
 st.subheader("🎣 Minijuego: La Pesca de Juan")
 
-# Cargamos explícitamente la imagen del pescador desde img/jugador.png
+def obtener_imagen_base64(ruta_relativa):
+    try:
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), ruta_relativa)
+        if not os.path.exists(ruta_absoluta):
+            ruta_absoluta = ruta_relativa
+        with open(ruta_absoluta, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode("utf-8")
+    except Exception as e:
+        return ""
+
 img_base64_pesca = obtener_imagen_base64("img/jugador.png")
 
 html_pesca_template = """
@@ -321,13 +338,12 @@ html_pesca_template = """
     let inputState = 'angle'; 
     let angleParam = 0.5; 
     
-    // Función auxiliar para obtener un valor aleatorio entre a y b
     function getRandomSpeed(a, b) {
         let val = Math.random() * (b - a) + a;
         return Math.random() < 0.5 ? val : -val;
     }
 
-    let angleSpeed = getRandomSpeed(0.04, 0.09); // Velocidad oscilante inicial de la caña entre a=0.04 y b=0.09
+    let angleSpeed = getRandomSpeed(0.04, 0.09);
     let fixedAngle = 0; let chargeForce = 0;
     
     let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
@@ -384,7 +400,6 @@ html_pesca_template = """
         let maxLifeTime = 25000 + Math.random() * 15000;
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
-        // Velocidad de movimiento horizontal y flotación dinámica de los bultos (más ágiles, entre a=2.5 y b=7.5)
         let randomVx = getRandomSpeed(2.5, 7.5);
         let randomDepthSpeed = getRandomSpeed(0.04, 0.09);
 
@@ -644,7 +659,7 @@ html_pesca_template = """
             if (dist > 30) { hook.x += (dx / dist) * 30; hook.y += (dy / dist) * 30; } 
             else { 
                 inputState = 'angle'; 
-                angleSpeed = getRandomSpeed(0.04, 0.10); // Nueva velocidad aleatoria al volver a empezar
+                angleSpeed = getRandomSpeed(0.04, 0.10);
                 if (angleParam > Math.PI) angleParam = (patera.direction === 'left') ? Math.PI * 1.2 : Math.PI * 1.7; 
             }
         }
