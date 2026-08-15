@@ -795,7 +795,7 @@ html_pesca_template = """
         return Math.random() < 0.5 ? val : -val;
     }
 
-    let angleSpeed = getRandomSpeed(0.01, 0.02);
+    let angleSpeed = getRandomSpeed(0.01, 0.011);
     let fixedAngle = 0; let chargeForce = 0;
     
     let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
@@ -1111,7 +1111,7 @@ html_pesca_template = """
             if (dist > 30) { hook.x += (dx / dist) * 30; hook.y += (dy / dist) * 30; } 
             else { 
                 inputState = 'angle'; 
-                angleSpeed = getRandomSpeed(0.04, 0.10);
+                angleSpeed = getRandomSpeed(0.01, 0.011);
                 if (angleParam > Math.PI) angleParam = (patera.direction === 'left') ? Math.PI * 1.2 : Math.PI * 1.7; 
             }
         }
