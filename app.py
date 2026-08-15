@@ -59,23 +59,23 @@ puntos_apuesta = {
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
 }
 
-# --- URLS DIRECTAS A LOS ARCHIVOS SVG EN WIKIMEDIA ---
+# --- URLS DE LOS ESCUDOS (Usando la CDN de ESPN, 100% estable y PNG transparente) ---
 escudos_urls = {
-    "Athletic Club": "https://upload.wikimedia.org/wikipedia/en/9/98/Club_Athletic_Bilbao_logo.svg",
-    "Elche": "https://upload.wikimedia.org/wikipedia/en/3/36/Elche_cf_logo.svg",
-    "Real Betis": "https://upload.wikimedia.org/wikipedia/en/1/13/Real_betis_logo.svg",
-    "Real Sociedad": "https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg",
-    "Racing": "https://upload.wikimedia.org/wikipedia/en/1/1c/Racing_de_Santander_logo.svg",
-    "Celta": "https://upload.wikimedia.org/wikipedia/en/1/12/RC_Celta_de_Vigo_logo.svg",
-    "Levante": "https://upload.wikimedia.org/wikipedia/en/7/7b/Levante_UD_logo.svg",
-    "Valencia": "https://upload.wikimedia.org/wikipedia/en/c/ce/Valenciacf.svg",
-    "Alavés": "https://upload.wikimedia.org/wikipedia/en/2/2e/Deportivo_Alaves_logo.svg",
-    "Getafe": "https://upload.wikimedia.org/wikipedia/en/7/7f/Getafe_logo.svg",
-    "Rayo Vallecano": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Escudo_del_Rayo_Vallecano.svg",
-    "Sevilla": "https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_FC_logo.svg",
-    "Osasuna": "https://upload.wikimedia.org/wikipedia/en/d/db/Osasuna_logo.svg",
-    "Espanyol": "https://upload.wikimedia.org/wikipedia/en/d/d6/Rcd_espanyol_logo.svg",
-    "Deportivo": "https://upload.wikimedia.org/wikipedia/en/4/4e/RC_Deportivo_La_Coru%C3%B1a_logo.svg",
+    "Athletic Club": "https://a.espncdn.com/i/teamlogos/soccer/500/175.png",
+    "Elche": "https://a.espncdn.com/i/teamlogos/soccer/500/3745.png",
+    "Real Betis": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png",
+    "Real Sociedad": "https://a.espncdn.com/i/teamlogos/soccer/500/289.png",
+    "Racing": "https://a.espncdn.com/i/teamlogos/soccer/500/296.png",
+    "Celta": "https://a.espncdn.com/i/teamlogos/soccer/500/176.png",
+    "Levante": "https://a.espncdn.com/i/teamlogos/soccer/500/130.png",
+    "Valencia": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png",
+    "Alavés": "https://a.espncdn.com/i/teamlogos/soccer/500/96.png",
+    "Getafe": "https://a.espncdn.com/i/teamlogos/soccer/500/2922.png",
+    "Rayo Vallecano": "https://a.espncdn.com/i/teamlogos/soccer/500/101.png",
+    "Sevilla": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
+    "Osasuna": "https://a.espncdn.com/i/teamlogos/soccer/500/131.png",
+    "Espanyol": "https://a.espncdn.com/i/teamlogos/soccer/500/177.png",
+    "Deportivo": "https://a.espncdn.com/i/teamlogos/soccer/500/179.png",
 }
 
 # --- CÓMPUTO DIRECTO DE PUNTOS ---
@@ -98,8 +98,8 @@ for jugador, equipos in porra_equipos.items():
         equipos_con_escudo.append(html_img)
 
     filas_clasificacion.append({
-        "Jugador_Limpio": jugador, # Oculta: Para que la gráfica lea el nombre sin HTML
-        "Puntos_Numericos": puntos_totales, # Oculta: Para que la gráfica lea números limpios
+        "Jugador_Limpio": jugador, # Oculta
+        "Puntos_Numericos": puntos_totales, # Oculta
         "Jugador": f"<b>{jugador}</b>",
         "Equipos": "<br>".join(equipos_con_escudo),
         "Goleador": "<br>".join([f"{gol} <b>({pts})</b>" for gol, pts in goleadores_dict.items()]),
@@ -157,7 +157,6 @@ col1, col2 = st.columns([1.3, 0.7])
 
 with col1:
     st.subheader("📊 Clasificación General")
-    # Filtramos para mostrar en la tabla web solo las columnas con estilo HTML
     df_mostrar = df_liga.sort_values(by="Puntos_Numericos", ascending=False)[
         ["Jugador", "Equipos", "Goleador", "Pts Equipos", "Goles", "Pts Apuesta", "Puntos Totales"]
     ]
@@ -166,7 +165,6 @@ with col1:
 
 with col2:
     st.subheader("🎯 Comparativa de Puntos")
-    # Usamos el dataframe original (df_liga) para alimentar la gráfica con los números reales
     df_grafica = df_liga.sort_values(by="Puntos_Numericos", ascending=False)
     
     fig_barras = px.bar(
@@ -176,7 +174,17 @@ with col2:
         color="Jugador_Limpio", 
         text_auto=True
     )
-    fig_barras.update_layout(showlegend=False, xaxis_title="Jugador", yaxis_title="Puntos Totales")
+    
+    # SOLUCIÓN EJE Y NEGATIVO: Forzar inicio en 0 y dar un margen superior
+    max_pts = df_grafica["Puntos_Numericos"].max()
+    rango_maximo = max_pts + 5 if max_pts > 0 else 10
+    
+    fig_barras.update_layout(
+        showlegend=False, 
+        xaxis_title="Jugador", 
+        yaxis_title="Puntos Totales",
+        yaxis=dict(range=[0, rango_maximo])
+    )
     st.plotly_chart(fig_barras, use_container_width=True)
 
 st.markdown("---")
@@ -185,5 +193,11 @@ st.subheader("⏳ Evolución Temporal de la Competición")
 fig_lineas = px.line(
     df_historial, x="Jornada", y="Puntos Totales", color="Jugador", markers=True,
 )
-fig_lineas.update_layout(xaxis_title="Jornada de Liga", yaxis_title="Puntos Totales Acumulados")
+
+# SOLUCIÓN EJE Y NEGATIVO (Gráfica de líneas)
+fig_lineas.update_layout(
+    xaxis_title="Jornada de Liga", 
+    yaxis_title="Puntos Totales Acumulados",
+    yaxis=dict(rangemode="tozero") # Evita que baje de 0
+)
 st.plotly_chart(fig_lineas, use_container_width=True)
