@@ -138,17 +138,10 @@ for gol, info in porra_goleadores.items():
     eq = info["Equipo"]
     st_eq = stats_equipos.get(eq, {"G":0, "E":0, "P":0})
     pj_equipo = st_eq["G"] + st_eq["E"] + st_eq["P"]
-    
-    ruta_img = escudos_archivos.get(eq, "")
-    base64_img = obtener_imagen_base64(ruta_img)
-    if base64_img:
-        escudo_html = f'<img src="{base64_img}" width="22" style="vertical-align: middle; margin-right: 6px;"> {eq}'
-    else:
-        escudo_html = f"⚽ {eq}"
         
     filas_goleadores.append({
         "Goleador": gol,
-        "Equipo": escudo_html,
+        "Equipo": eq,
         "Jugador": info["Jugador"],
         "PJ": pj_equipo,
         "Goles": info["Goles"]
