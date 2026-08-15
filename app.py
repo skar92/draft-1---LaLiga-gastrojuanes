@@ -1,4 +1,3 @@
-```python
 import base64
 import io
 import os
@@ -1195,7 +1194,6 @@ else:
         fig_lineas,
         use_container_width=True
     )
-```
 
 
 # ==============================================================================
