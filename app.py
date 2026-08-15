@@ -1,8 +1,15 @@
+```python
 import base64
+import io
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 import pandas as pd
 import plotly.express as px
+import requests
 import streamlit as st
+
 
 # ==============================================================================
 # CONFIGURACIÓN DE LA INTERFAZ
@@ -17,15 +24,329 @@ st.title("🏆 Seguimiento y Clasificación del Draft de LaLiga")
 
 
 # ==============================================================================
+# CONFIGURACIÓN DEL HISTÓRICO EN GITHUB
+# ==============================================================================
+
+GITHUB_USUARIO = "skar92"
+GITHUB_REPOSITORIO = "draft-1---laliga-gastrojuanes"
+GITHUB_RAMA = "main"
+GITHUB_ARCHIVO_HISTORICO = "historico_puntos.csv"
+
+GITHUB_API_URL = (
+    f"https://api.github.com/repos/"
+    f"{GITHUB_USUARIO}/"
+    f"{GITHUB_REPOSITORIO}/"
+    f"contents/"
+    f"{GITHUB_ARCHIVO_HISTORICO}"
+)
+
+# Zona horaria española.
+# Europe/Madrid cambia automáticamente entre horario de verano e invierno.
+ZONA_HORARIA_ESPAÑA = ZoneInfo("Europe/Madrid")
+
+
+# ==============================================================================
+# FUNCIONES DEL HISTÓRICO
+# ==============================================================================
+
+def obtener_fecha_españa():
+    """
+    Devuelve la fecha actual según la hora española.
+    Formato: YYYY-MM-DD
+    """
+
+    ahora = datetime.now(
+        ZONA_HORARIA_ESPAÑA
+    )
+
+    return ahora.date().isoformat()
+
+
+def obtener_historico_github():
+    """
+    Descarga historico_puntos.csv desde GitHub.
+
+    Devuelve:
+        df   -> DataFrame con el histórico
+        sha  -> SHA del archivo en GitHub
+    """
+
+    token = st.secrets["GITHUB_TOKEN"]
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+    respuesta = requests.get(
+        GITHUB_API_URL,
+        headers=headers,
+        params={
+            "ref": GITHUB_RAMA
+        },
+        timeout=10
+    )
+
+    # --------------------------------------------------------------------------
+    # Archivo encontrado
+    # --------------------------------------------------------------------------
+
+    if respuesta.status_code == 200:
+
+        datos = respuesta.json()
+
+        contenido = base64.b64decode(
+            datos["content"]
+        ).decode("utf-8")
+
+        try:
+
+            df = pd.read_csv(
+                io.StringIO(contenido)
+            )
+
+        except Exception:
+
+            df = pd.DataFrame(
+                columns=[
+                    "Fecha",
+                    "Jugador",
+                    "Puntos"
+                ]
+            )
+
+        return df, datos["sha"]
+
+    # --------------------------------------------------------------------------
+    # Archivo no encontrado
+    # --------------------------------------------------------------------------
+
+    elif respuesta.status_code == 404:
+
+        df = pd.DataFrame(
+            columns=[
+                "Fecha",
+                "Jugador",
+                "Puntos"
+            ]
+        )
+
+        return df, None
+
+    # --------------------------------------------------------------------------
+    # Error
+    # --------------------------------------------------------------------------
+
+    else:
+
+        raise Exception(
+            "No se pudo leer el histórico de GitHub.\n\n"
+            f"Código: {respuesta.status_code}\n"
+            f"Respuesta: {respuesta.text}"
+        )
+
+
+def guardar_historico_github(df, sha):
+    """
+    Guarda el DataFrame del histórico en GitHub.
+    """
+
+    token = st.secrets["GITHUB_TOKEN"]
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+    contenido_csv = df.to_csv(
+        index=False
+    )
+
+    contenido_base64 = base64.b64encode(
+        contenido_csv.encode("utf-8")
+    ).decode("utf-8")
+
+    datos = {
+        "message": "Actualizar histórico de puntos",
+        "content": contenido_base64,
+        "branch": GITHUB_RAMA
+    }
+
+    # Para modificar un archivo existente,
+    # GitHub necesita el SHA actual.
+    if sha is not None:
+
+        datos["sha"] = sha
+
+    respuesta = requests.put(
+        GITHUB_API_URL,
+        headers=headers,
+        json=datos,
+        timeout=10
+    )
+
+    if respuesta.status_code not in [200, 201]:
+
+        raise Exception(
+            "No se pudo guardar el histórico en GitHub.\n\n"
+            f"Código: {respuesta.status_code}\n"
+            f"Respuesta: {respuesta.text}"
+        )
+
+
+def actualizar_historico_puntos(df_general):
+    """
+    Actualiza el histórico de puntos.
+
+    Funcionamiento:
+
+    - Lee el histórico existente de GitHub.
+    - Obtiene la fecha actual en España.
+    - Elimina los registros existentes de hoy.
+    - Añade los puntos actuales.
+    - Conserva todos los días anteriores.
+    - Guarda el resultado en GitHub.
+
+    Por tanto, si la página se actualiza varias veces el mismo día,
+    el dato de ese día se sobrescribe en lugar de duplicarse.
+    """
+
+    fecha_hoy = obtener_fecha_españa()
+
+    # --------------------------------------------------------------------------
+    # Leer histórico
+    # --------------------------------------------------------------------------
+
+    historico, sha = obtener_historico_github()
+
+    # --------------------------------------------------------------------------
+    # Asegurar estructura correcta
+    # --------------------------------------------------------------------------
+
+    if historico.empty:
+
+        historico = pd.DataFrame(
+            columns=[
+                "Fecha",
+                "Jugador",
+                "Puntos"
+            ]
+        )
+
+    else:
+
+        historico["Fecha"] = (
+            pd.to_datetime(
+                historico["Fecha"],
+                errors="coerce"
+            )
+            .dt.strftime("%Y-%m-%d")
+        )
+
+        historico["Puntos"] = pd.to_numeric(
+            historico["Puntos"],
+            errors="coerce"
+        )
+
+        historico = historico.dropna(
+            subset=[
+                "Fecha",
+                "Jugador",
+                "Puntos"
+            ]
+        )
+
+    # --------------------------------------------------------------------------
+    # Crear los datos actuales
+    # --------------------------------------------------------------------------
+
+    datos_actuales = pd.DataFrame({
+        "Fecha": fecha_hoy,
+
+        "Jugador": (
+            df_general["Jugador"]
+            .str.replace(
+                "<b>",
+                "",
+                regex=False
+            )
+            .str.replace(
+                "</b>",
+                "",
+                regex=False
+            )
+        ),
+
+        "Puntos": df_general["Total_Num"].astype(float)
+    })
+
+    # --------------------------------------------------------------------------
+    # Eliminar los datos de HOY
+    #
+    # Esto permite sobrescribir el dato del mismo día.
+    # --------------------------------------------------------------------------
+
+    historico = historico[
+        historico["Fecha"] != fecha_hoy
+    ]
+
+    # --------------------------------------------------------------------------
+    # Añadir los datos actuales
+    # --------------------------------------------------------------------------
+
+    historico = pd.concat(
+        [
+            historico,
+            datos_actuales
+        ],
+        ignore_index=True
+    )
+
+    # --------------------------------------------------------------------------
+    # Ordenar
+    # --------------------------------------------------------------------------
+
+    historico = (
+        historico
+        .sort_values(
+            by=[
+                "Fecha",
+                "Jugador"
+            ]
+        )
+        .reset_index(drop=True)
+    )
+
+    # --------------------------------------------------------------------------
+    # Guardar en GitHub
+    # --------------------------------------------------------------------------
+
+    guardar_historico_github(
+        historico,
+        sha
+    )
+
+    return historico
+
+
+# ==============================================================================
 # FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64
 # ==============================================================================
 
 def obtener_imagen_base64(ruta):
+
     if os.path.exists(ruta):
+
         with open(ruta, "rb") as f:
+
             data = f.read()
 
-        encoded = base64.b64encode(data).decode()
+        encoded = base64.b64encode(
+            data
+        ).decode()
+
         return f"data:image/png;base64,{encoded}"
 
     return ""
@@ -34,11 +355,9 @@ def obtener_imagen_base64(ruta):
 # ==============================================================================
 # ESCUDOS
 # ==============================================================================
-# La clave del diccionario es el nombre que utilizaremos en todo el programa.
-# El valor es el nombre/ruta del PNG dentro de la carpeta img/
-# ==============================================================================
 
 escudos_archivos = {
+
     "Athletic Club": "img/athletic.png",
     "Elche": "img/elche.png",
     "Real Betis Balompie": "img/betis.png",
@@ -63,57 +382,163 @@ escudos_archivos = {
 
 
 # ==============================================================================
-# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA
+# EQUIPOS ASIGNADOS A CADA PARTICIPANTE
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# EQUIPOS ASIGNADOS A CADA PARTICIPANTE
-# ------------------------------------------------------------------------------
-
 asig_equipos = {
-    "Ejkar": ["Athletic Club", "Elche"],
-    "Sierra": ["Real Betis Balompie", "Malaga"],
-    "Vecina": ["Real Sociedad", "Racing"],
-    "Mírete": ["Celta", "Levante"],
-    "Miguel Ángel": ["Valencia", "Alavés"],
-    "Juan": ["Getafe", "Rayo Vallecano"],
-    "Joaquín": ["Sevilla", "Osasuna"],
-    "Telenti": ["Espanyol", "Deportivo"],
+
+    "Ejkar": [
+        "Athletic Club",
+        "Elche"
+    ],
+
+    "Sierra": [
+        "Real Betis Balompie",
+        "Malaga"
+    ],
+
+    "Vecina": [
+        "Real Sociedad",
+        "Racing"
+    ],
+
+    "Mírete": [
+        "Celta",
+        "Levante"
+    ],
+
+    "Miguel Ángel": [
+        "Valencia",
+        "Alavés"
+    ],
+
+    "Juan": [
+        "Getafe",
+        "Rayo Vallecano"
+    ],
+
+    "Joaquín": [
+        "Sevilla",
+        "Osasuna"
+    ],
+
+    "Telenti": [
+        "Espanyol",
+        "Deportivo"
+    ],
 }
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # ESTADÍSTICAS DE LOS EQUIPOS
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 stats_equipos = {
-    "Athletic Club": {"G": 0, "E": 0, "P": 0},
-    "Elche": {"G": 0, "E": 0, "P": 0},
-    "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
-    "Malaga": {"G": 0, "E": 0, "P": 0},
-    "Real Sociedad": {"G": 0, "E": 0, "P": 0},
-    "Racing": {"G": 0, "E": 0, "P": 0},
-    "Celta": {"G": 0, "E": 0, "P": 0},
-    "Levante": {"G": 0, "E": 0, "P": 0},
-    "Valencia": {"G": 0, "E": 0, "P": 0},
-    "Alavés": {"G": 0, "E": 0, "P": 0},
-    "Getafe": {"G": 0, "E": 0, "P": 0},
-    "Rayo Vallecano": {"G": 0, "E": 0, "P": 0},
-    "Sevilla": {"G": 0, "E": 0, "P": 0},
-    "Osasuna": {"G": 0, "E": 0, "P": 0},
-    "Espanyol": {"G": 0, "E": 0, "P": 0},
-    "Deportivo": {"G": 0, "E": 0, "P": 0},
+
+    "Athletic Club": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Elche": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Real Betis Balompie": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Malaga": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Real Sociedad": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Racing": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Celta": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Levante": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Valencia": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Alavés": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Getafe": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Rayo Vallecano": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Sevilla": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Osasuna": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Espanyol": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
+
+    "Deportivo": {
+        "G": 0,
+        "E": 0,
+        "P": 0
+    },
 }
 
 
-# ------------------------------------------------------------------------------
-# 🎯 PORRA DE GOLEADORES
-#
-# "Equipo" coincide EXACTAMENTE con las claves de escudos_archivos.
-# Solo tendrás que modificar aquí los goles durante la temporada.
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# PORRA DE GOLEADORES
+# ==============================================================================
 
 porra_goleadores = {
+
     "Borja Iglesias": {
         "Jugador": "Ejkar",
         "Equipo": "Celta",
@@ -206,11 +631,12 @@ porra_goleadores = {
 }
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # PUNTOS DE APUESTAS
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 puntos_apuesta = {
+
     "Sierra": 0,
     "Joaquín": 0,
     "Ejkar": 0,
@@ -229,7 +655,9 @@ puntos_apuesta = {
 equipo_a_jugador = {}
 
 for jugador, lista_eqs in asig_equipos.items():
+
     for eq in lista_eqs:
+
         equipo_a_jugador[eq] = jugador
 
 
@@ -246,12 +674,22 @@ for eq, st_eq in stats_equipos.items():
     p = st_eq["P"]
 
     jugados = g + e + p
-    puntos = (g * 3) + e
 
-    ruta_img = escudos_archivos.get(eq, "")
-    base64_img = obtener_imagen_base64(ruta_img)
+    puntos = (
+        g * 3
+    ) + e
+
+    ruta_img = escudos_archivos.get(
+        eq,
+        ""
+    )
+
+    base64_img = obtener_imagen_base64(
+        ruta_img
+    )
 
     if base64_img:
+
         escudo_html = (
             f'<img src="{base64_img}" '
             f'width="24" '
@@ -261,17 +699,30 @@ for eq, st_eq in stats_equipos.items():
             f'object-fit: contain;">'
             f'{eq}'
         )
+
     else:
+
         escudo_html = f"⚽ {eq}"
 
     filas_equipos.append({
+
         "Equipo_Nombre": eq,
+
         "Equipo": escudo_html,
-        "Jugador": equipo_a_jugador.get(eq, "-"),
+
+        "Jugador": equipo_a_jugador.get(
+            eq,
+            "-"
+        ),
+
         "PJ": jugados,
+
         "G": g,
+
         "E": e,
+
         "P": p,
+
         "Puntos": puntos,
     })
 
@@ -296,13 +747,15 @@ for gol, info in porra_goleadores.items():
 
     equipo = info["Equipo"]
 
-    # Buscamos automáticamente el PNG correspondiente al equipo
-    ruta_img = escudos_archivos.get(equipo, "")
+    ruta_img = escudos_archivos.get(
+        equipo,
+        ""
+    )
 
-    # Convertimos el PNG a base64
-    base64_img = obtener_imagen_base64(ruta_img)
+    base64_img = obtener_imagen_base64(
+        ruta_img
+    )
 
-    # Si existe el escudo, lo colocamos delante del nombre del goleador
     if base64_img:
 
         goleador_html = (
@@ -316,17 +769,24 @@ for gol, info in porra_goleadores.items():
         )
 
     else:
+
         goleador_html = f"⚽ {gol}"
 
     filas_goleadores.append({
+
         "Goleador": goleador_html,
+
         "Jugador": info["Jugador"],
+
         "Equipo": equipo,
+
         "Goles": info["Goles"],
     })
 
 
-df_goleadores = pd.DataFrame(filas_goleadores)
+df_goleadores = pd.DataFrame(
+    filas_goleadores
+)
 
 if not df_goleadores.empty:
 
@@ -350,9 +810,13 @@ for jug in asig_equipos.keys():
 
     eqs_jugador = asig_equipos[jug]
 
-    # Puntos obtenidos por los dos equipos del participante
+    # --------------------------------------------------------------------------
+    # Puntos de los equipos
+    # --------------------------------------------------------------------------
+
     pts_eqs = sum(
         [
+
             df_equipos.loc[
                 df_equipos["Equipo_Nombre"] == eq,
                 "Puntos"
@@ -360,34 +824,65 @@ for jug in asig_equipos.keys():
 
             for eq in eqs_jugador
 
-            if eq in df_equipos["Equipo_Nombre"].values
+            if eq in df_equipos[
+                "Equipo_Nombre"
+            ].values
+
         ]
     )
 
-    # Goles de sus dos goleadores
+    # --------------------------------------------------------------------------
+    # Goles de los goleadores
+    # --------------------------------------------------------------------------
+
     goles_jugador = sum(
         [
+
             info["Goles"]
+
             for info in porra_goleadores.values()
+
             if info["Jugador"] == jug
+
         ]
     )
 
-    # Puntos adicionales de apuestas
-    extra = puntos_apuesta.get(jug, 0)
+    # --------------------------------------------------------------------------
+    # Puntos de apuestas
+    # --------------------------------------------------------------------------
 
+    extra = puntos_apuesta.get(
+        jug,
+        0
+    )
+
+    # --------------------------------------------------------------------------
     # Total
-    total = pts_eqs + goles_jugador + extra
+    # --------------------------------------------------------------------------
+
+    total = (
+        pts_eqs
+        + goles_jugador
+        + extra
+    )
 
     filas_general.append({
+
         "Jugador": f"<b>{jug}</b>",
+
         "Puntos de Equipos": pts_eqs,
+
         "Goles": goles_jugador,
+
         "Puntos de Apuestas": extra,
+
         "Total": (
             f"<span style='font-size: 1.2em; "
-            f"font-weight: bold;'>{total}</span>"
+            f"font-weight: bold;'>"
+            f"{total}"
+            f"</span>"
         ),
+
         "Total_Num": total
     })
 
@@ -400,6 +895,38 @@ df_general = (
     )
     .reset_index(drop=True)
 )
+
+
+# ==============================================================================
+# ACTUALIZAR HISTÓRICO
+# ==============================================================================
+
+try:
+
+    historico_puntos = actualizar_historico_puntos(
+        df_general
+    )
+
+except Exception as error:
+
+    st.error(
+        "⚠️ No se pudo actualizar el histórico de puntos en GitHub."
+    )
+
+    st.code(
+        str(error)
+    )
+
+    # Para que la aplicación pueda seguir mostrando
+    # las tablas aunque falle el histórico.
+
+    historico_puntos = pd.DataFrame(
+        columns=[
+            "Fecha",
+            "Jugador",
+            "Puntos"
+        ]
+    )
 
 
 # ==============================================================================
@@ -456,13 +983,15 @@ st.markdown(
 col1, col2 = st.columns(2)
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # ⚽ CLASIFICACIÓN DE EQUIPOS
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 with col1:
 
-    st.subheader("⚽ Clasificación de Equipos")
+    st.subheader(
+        "⚽ Clasificación de Equipos"
+    )
 
     df_mostrar_eq = df_equipos[
         [
@@ -479,24 +1008,28 @@ with col1:
     st.markdown(
         f"""
         <div class="dataframe-container">
+
             {df_mostrar_eq.to_html(
                 escape=False,
                 index=False,
                 classes="styled-table"
             )}
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # 🎯 TABLA DE GOLEADORES
-# ------------------------------------------------------------------------------
+# ==============================================================================
 
 with col2:
 
-    st.subheader("🎯 Tabla de Goleadores")
+    st.subheader(
+        "🎯 Tabla de Goleadores"
+    )
 
     if not df_goleadores.empty:
 
@@ -511,18 +1044,23 @@ with col2:
         st.markdown(
             f"""
             <div class="dataframe-container">
+
                 {df_mostrar_gol.to_html(
                     escape=False,
                     index=False,
                     classes="styled-table"
                 )}
+
             </div>
             """,
             unsafe_allow_html=True
         )
 
     else:
-        st.info("No hay goleadores registrados todavía.")
+
+        st.info(
+            "No hay goleadores registrados todavía."
+        )
 
 
 # ==============================================================================
@@ -536,7 +1074,9 @@ st.markdown("---")
 # 🏆 CLASIFICACIÓN GENERAL
 # ==============================================================================
 
-st.subheader("🏆 Clasificación General")
+st.subheader(
+    "🏆 Clasificación General (Participantes)"
+)
 
 df_mostrar_gen = df_general[
     [
@@ -551,11 +1091,13 @@ df_mostrar_gen = df_general[
 st.markdown(
     f"""
     <div class="dataframe-container">
+
         {df_mostrar_gen.to_html(
             escape=False,
             index=False,
             classes="styled-table"
         )}
+
     </div>
     """,
     unsafe_allow_html=True
@@ -570,127 +1112,90 @@ st.markdown("---")
 
 
 # ==============================================================================
-# 📊 GRÁFICA DE PUNTOS TOTALES
+# 📈 EVOLUCIÓN TEMPORAL DE PUNTOS
 # ==============================================================================
 
-st.subheader("📊 Gráfica de Puntos Totales")
-
-fig_barras = px.bar(
-    df_general,
-    x="Jugador",
-    y="Total_Num",
-    color="Jugador",
-    text_auto=True
+st.subheader(
+    "📈 Evolución temporal de puntos"
 )
 
-max_pts = df_general["Total_Num"].max()
+if historico_puntos.empty:
 
-fig_barras.update_layout(
-    showlegend=False,
-    xaxis_title="Participante",
-    yaxis_title="Puntos Totales",
-    yaxis=dict(
-        range=[
-            0,
-            max_pts + 5 if max_pts > 0 else 10
-        ]
+    st.info(
+        "Todavía no hay datos históricos."
     )
-)
 
-st.plotly_chart(
-    fig_barras,
-    use_container_width=True
-)
+else:
 
+    historico_grafica = historico_puntos.copy()
 
+    historico_grafica["Fecha"] = pd.to_datetime(
+        historico_grafica["Fecha"]
+    )
 
+    historico_grafica["Puntos"] = pd.to_numeric(
+        historico_grafica["Puntos"],
+        errors="coerce"
+    )
 
-
-
-
-
-
-
-
-
-
-
-
-import os
-import json
-import base64
-import streamlit as st
-import streamlit.components.v1 as components
-
-# ==============================================================================
-# --- 🏆 SISTEMA DE PERSISTENCIA Y RÉCORDS ---
-# ==============================================================================
-RECORDS_FILE = "records_pesca.json"
-
-
-def cargar_records():
-    if os.path.exists(RECORDS_FILE):
-        try:
-            with open(RECORDS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-
-def guardar_record(nombre, tiempo):
-    records = cargar_records()
-    records.append({
-        "nombre": nombre,
-        "tiempo": float(tiempo)
-    })
-
-    # Menor tiempo = mejor récord
-    records = sorted(records, key=lambda x: x["tiempo"])
-
-    with open(RECORDS_FILE, "w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, indent=4)
-
-import os
-import json
-import base64
-import streamlit as st
-import streamlit.components.v1 as components
-
-# ==============================================================================
-# --- 🏆 SISTEMA DE PERSISTENCIA Y RÉCORDS ---
-# ==============================================================================
-RECORDS_FILE = "records_pesca.json"
-
-
-def cargar_records():
-    if os.path.exists(RECORDS_FILE):
-        try:
-            with open(RECORDS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
-
-
-def guardar_record(nombre, tiempo):
-    records = cargar_records()
-
-    records.append({
-        "nombre": nombre,
-        "tiempo": float(tiempo)
-    })
-
-    # Menor tiempo = mejor récord
-    records = sorted(records, key=lambda x: x["tiempo"])
-
-    with open(RECORDS_FILE, "w", encoding="utf-8") as f:
-        json.dump(
-            records,
-            f,
-            ensure_ascii=False,
-            indent=4
+    historico_grafica = (
+        historico_grafica
+        .dropna(
+            subset=[
+                "Fecha",
+                "Puntos"
+            ]
         )
+        .sort_values(
+            by=[
+                "Fecha",
+                "Jugador"
+            ]
+        )
+        .reset_index(drop=True)
+    )
+
+    fig_lineas = px.line(
+        historico_grafica,
+        x="Fecha",
+        y="Puntos",
+        color="Jugador",
+        markers=True,
+        line_shape="linear",
+        hover_data={
+            "Fecha": "|%d/%m/%Y",
+            "Jugador": True,
+            "Puntos": True
+        }
+    )
+
+    fig_lineas.update_traces(
+        line=dict(
+            width=3
+        ),
+        marker=dict(
+            size=8
+        )
+    )
+
+    fig_lineas.update_layout(
+        xaxis_title="Fecha",
+        yaxis_title="Puntos Totales",
+        hovermode="x unified",
+        legend_title="Jugador",
+        xaxis=dict(
+            tickformat="%d/%m/%Y"
+        ),
+        yaxis=dict(
+            rangemode="tozero"
+        )
+    )
+
+    st.plotly_chart(
+        fig_lineas,
+        use_container_width=True
+    )
+```
 
 
 # ==============================================================================
