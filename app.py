@@ -140,7 +140,7 @@ porra_goleadores = {
 
     "Aubameyang": {
         "Jugador": "Vecina",
-        "Equipo": "Villarreal",
+        "Equipo": "Deportivo",
         "Goles": 0
     },
 
