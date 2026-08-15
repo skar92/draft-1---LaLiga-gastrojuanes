@@ -207,40 +207,73 @@ st.plotly_chart(fig_barras, use_container_width=True)
 st.markdown("---")
 st.subheader("🎣 Minijuego: La Pesca de Juan")
 
-# Cargamos explícitamente la imagen del pescador desde img/jugador.png
+# Cargamos la imagen del pescador
 img_base64_pesca = obtener_imagen_base64("img/jugador.png")
 
 html_pesca_template = """
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; touch-action: none; background: #87CEEB; }
-    #game-container { position: relative; width: 100%; max-width: 800px; margin: 0 auto; background: #000; }
-    #game-canvas { background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 35%, #1E90FF 35%, #051937 100%); display: block; width: 100%; height: 500px; }
-    #ui { position: absolute; top: 10px; left: 10px; color: white; text-shadow: 1px 1px 2px black; pointer-events: none; font-weight: bold; font-size: 13px; z-index: 10; }
-    
-    #fullscreen-btn {
-        position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7);
-        color: #ffeb3b; border: 2px solid #ffeb3b; padding: 6px 12px; border-radius: 20px;
-        font-weight: bold; font-size: 11px; cursor: pointer; z-index: 50; display: block;
-    }
-
-    #giant-alert { 
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        color: white; font-size: 30px; font-weight: bold; text-align: center; 
-        background: rgba(0, 0, 0, 0.95); padding: 35px; border-radius: 20px; 
-        box-shadow: 0 0 30px rgba(255,255,255,0.4); display: none; z-index: 40; width: 85%; max-width: 600px;
-        box-sizing: border-box; border: 4px solid #ffeb3b; line-height: 1.4;
-    }
-    
-    #penalty-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 35px; font-weight: bold; display: none; text-align: center; background: rgba(0,0,0,0.85); padding: 20px; border-radius: 15px; z-index: 20; }
-    #win-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 15px; text-align: center; display: none; box-shadow: 0 0 25px rgba(0,0,0,0.5); z-index: 30; }
-    .btn { background: #2ecc71; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 12px; }
+    body { margin: 0; padding: 0; overflow: hidden; background: #87CEEB; }
+    #game-container { position: relative; width: 100%; max-width: 800px; margin: 0 auto; }
+    #game-canvas { display: block; width: 100%; height: 500px; }
 </style>
 </head>
 <body>
+<div id="game-container">
+    <canvas id="game-canvas"></canvas>
+</div>
+<script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Crear objeto de imagen dedicado al pescador
+    const pescadorImg = new Image();
+    pescadorImg.src = "data:image/png;base64,{{JUAN_IMAGE_BASE64}}";
+    
+    // Objeto para los peces
+    const juanImg = new Image();
+    juanImg.src = "data:image/png;base64,{{JUAN_IMAGE_BASE64}}";
+
+    let width = 800, height = 500;
+    canvas.width = width; canvas.height = height;
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        // ... (resto de tu lógica de dibujo)
+
+        // DIBUJO DEL PESCADOR (MODIFICADO)
+        let seaLine = height * 0.35; 
+        if(seaLine < 180) seaLine = 180;
+        
+        ctx.fillStyle = '#5c3a21'; 
+        ctx.fillRect(width/2 - 35, seaLine - 15, 70, 15);
+        
+        // Dibujamos el pescador solo si la imagen cargó
+        if (pescadorImg.complete) {
+            ctx.drawImage(pescadorImg, width/2 - 22, seaLine - 72, 44, 60);
+        } else {
+            // Placeholder si falla la carga
+            ctx.fillStyle = 'red';
+            ctx.fillRect(width/2 - 22, seaLine - 72, 44, 60);
+        }
+
+        requestAnimationFrame(draw);
+    }
+    
+    // Asegurar que el loop inicie
+    pescadorImg.onload = () => draw();
+    draw();
+</script>
+</body>
+</html>
+"""
+
+# Aplicar el reemplazo
+html_pesca = html_pesca_template.replace("{{JUAN_IMAGE_BASE64}}", img_base64_pesca)
+components.html(html_pesca, height=520)
 
 <div id="game-container">
     <button id="fullscreen-btn">📱 FULLSCREEN</button>
