@@ -79,7 +79,7 @@ porra_goleadores = {
     "Cucho Hernández": {"Jugador": "Ejkar", "Goles": 0},
 
     "Lookman": {"Jugador": "Sierra", "Goles": 0},
-    "Antony": {"Jugador": "Sierra", "Goles": 0},
+    "Isi Palazón": {"Jugador": "Sierra", "Goles": 0},
 
     
     "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
