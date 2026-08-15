@@ -536,7 +536,7 @@ st.markdown("---")
 # 🏆 CLASIFICACIÓN GENERAL
 # ==============================================================================
 
-st.subheader("🏆 Clasificación General (Participantes)")
+st.subheader("🏆 Clasificación General")
 
 df_mostrar_gen = df_general[
     [
