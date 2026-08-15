@@ -1,10 +1,4 @@
-Para poner los escudos reales de los equipos, necesitamos usar **enlaces a las imágenes de los escudos** (en este caso, de Wikimedia) e inyectar un poco de código HTML en la tabla para que Streamlit pueda renderizar las imágenes correctamente junto al texto.
 
-Como la función por defecto `st.dataframe()` de Streamlit no lee código HTML interno, usaremos `st.markdown(df.to_html(escape=False), unsafe_allow_html=True)` para la tabla de clasificación.
-
-Sustituye todo el contenido de tu `app.py` por el siguiente código:
-
-```python
 import csv
 from datetime import datetime
 import os
@@ -198,4 +192,3 @@ fig_lineas = px.line(
 fig_lineas.update_layout(xaxis_title="Jornada de Liga", yaxis_title="Puntos Totales Acumulados")
 st.plotly_chart(fig_lineas, use_container_width=True)
 
-```
