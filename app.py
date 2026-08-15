@@ -651,6 +651,47 @@ def guardar_record(nombre, tiempo):
     with open(RECORDS_FILE, "w", encoding="utf-8") as f:
         json.dump(records, f, ensure_ascii=False, indent=4)
 
+import os
+import json
+import base64
+import streamlit as st
+import streamlit.components.v1 as components
+
+# ==============================================================================
+# --- 🏆 SISTEMA DE PERSISTENCIA Y RÉCORDS ---
+# ==============================================================================
+RECORDS_FILE = "records_pesca.json"
+
+
+def cargar_records():
+    if os.path.exists(RECORDS_FILE):
+        try:
+            with open(RECORDS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+def guardar_record(nombre, tiempo):
+    records = cargar_records()
+
+    records.append({
+        "nombre": nombre,
+        "tiempo": float(tiempo)
+    })
+
+    # Menor tiempo = mejor récord
+    records = sorted(records, key=lambda x: x["tiempo"])
+
+    with open(RECORDS_FILE, "w", encoding="utf-8") as f:
+        json.dump(
+            records,
+            f,
+            ensure_ascii=False,
+            indent=4
+        )
+
 
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
@@ -660,18 +701,21 @@ st.subheader("🎣 Minijuego: La Pesca de Juan")
 
 
 # ==============================================================================
-# --- 🏆 GESTIÓN DE VICTORIA Y RÉCORDS ---
+# --- 🏆 GESTIÓN DE VICTORIA ---
 # ==============================================================================
 query_params = st.query_params
 
 if "win" in query_params and "time" in query_params:
+
     tiempo_ganado = query_params["time"]
 
     st.success(
-        f"🎉 ¡Has completado el minijuego en **{tiempo_ganado} segundos**!"
+        f"🎉 ¡Has completado el minijuego en "
+        f"**{tiempo_ganado} segundos**!"
     )
 
     with st.form("form_registro_record"):
+
         st.markdown("### 💾 Registrar Récord en la Web")
 
         nombre_elegido = st.selectbox(
@@ -688,13 +732,20 @@ if "win" in query_params and "time" in query_params:
             ]
         )
 
-        submitted = st.form_submit_button("Guardar Récord Definitivo")
+        submitted = st.form_submit_button(
+            "Guardar Récord Definitivo"
+        )
 
         if submitted:
-            guardar_record(nombre_elegido, tiempo_ganado)
+
+            guardar_record(
+                nombre_elegido,
+                tiempo_ganado
+            )
 
             st.success(
-                f"¡Récord guardado correctamente para **{nombre_elegido}**!"
+                f"¡Récord guardado correctamente para "
+                f"**{nombre_elegido}**!"
             )
 
             st.query_params.clear()
@@ -707,7 +758,10 @@ if "win" in query_params and "time" in query_params:
 records_actuales = cargar_records()
 
 if records_actuales:
-    st.markdown("### 🏅 Tabla de Récords Históricos (Permanente)")
+
+    st.markdown(
+        "### 🏅 Tabla de Récords Históricos (Permanente)"
+    )
 
     st.dataframe(
         [
@@ -727,7 +781,9 @@ if records_actuales:
 # --- 🖼️ IMAGEN DEL JUGADOR ---
 # ==============================================================================
 def obtener_imagen_base64(ruta_relativa):
+
     try:
+
         ruta_absoluta = os.path.join(
             os.path.dirname(__file__),
             ruta_relativa
@@ -737,22 +793,27 @@ def obtener_imagen_base64(ruta_relativa):
             ruta_absoluta = ruta_relativa
 
         with open(ruta_absoluta, "rb") as img_file:
+
             return base64.b64encode(
                 img_file.read()
             ).decode("utf-8")
 
     except Exception:
+
         return ""
 
 
-img_base64_pesca = obtener_imagen_base64("img/jugador.png")
+img_base64_pesca = obtener_imagen_base64(
+    "img/jugador.png"
+)
 
 
 # ==============================================================================
-# --- 🎮 HTML + JAVASCRIPT DEL JUEGO ---
+# --- 🎮 HTML DEL JUEGO ---
 # ==============================================================================
 html_pesca_template = """
 <!DOCTYPE html>
+
 <html>
 
 <head>
@@ -767,24 +828,39 @@ html_pesca_template = """
 <style>
 
 body {
+
     margin: 0;
     padding: 0;
+
     overflow: hidden;
+
     font-family: 'Segoe UI', sans-serif;
+
     user-select: none;
+
     touch-action: none;
+
     background: #87CEEB;
 }
 
+
 #game-container {
+
     position: relative;
+
     width: 100%;
+
     max-width: 800px;
+
     margin: 0 auto;
+
     background: #000;
+
 }
 
+
 #game-canvas {
+
     background:
         linear-gradient(
             to bottom,
@@ -795,159 +871,299 @@ body {
         );
 
     display: block;
+
     width: 100%;
+
     height: 500px;
+
 }
+
 
 #ui {
+
     position: absolute;
+
     top: 10px;
+
     left: 10px;
+
     color: white;
-    text-shadow: 1px 1px 2px black;
+
+    text-shadow:
+        1px 1px 2px black;
+
     pointer-events: none;
+
     font-weight: bold;
+
     font-size: 13px;
+
     z-index: 10;
+
 }
+
 
 #fullscreen-btn {
+
     position: absolute;
+
     top: 10px;
+
     right: 10px;
-    background: rgba(0,0,0,0.7);
+
+    background:
+        rgba(0,0,0,0.7);
+
     color: #ffeb3b;
-    border: 2px solid #ffeb3b;
-    padding: 6px 12px;
-    border-radius: 20px;
+
+    border:
+        2px solid #ffeb3b;
+
+    padding:
+        6px 12px;
+
+    border-radius:
+        20px;
+
     font-weight: bold;
+
     font-size: 11px;
+
     cursor: pointer;
+
     z-index: 50;
+
     display: block;
+
 }
+
 
 #giant-alert {
+
     position: absolute;
+
     top: 50%;
+
     left: 50%;
-    transform: translate(-50%, -50%);
+
+    transform:
+        translate(-50%, -50%);
+
     color: white;
+
     font-size: 30px;
+
     font-weight: bold;
+
     text-align: center;
-    background: rgba(0, 0, 0, 0.95);
+
+    background:
+        rgba(0, 0, 0, 0.95);
+
     padding: 35px;
+
     border-radius: 20px;
-    box-shadow: 0 0 30px rgba(255,255,255,0.4);
+
+    box-shadow:
+        0 0 30px rgba(255,255,255,0.4);
+
     display: none;
+
     z-index: 40;
+
     width: 85%;
+
     max-width: 600px;
+
     box-sizing: border-box;
-    border: 4px solid #ffeb3b;
+
+    border:
+        4px solid #ffeb3b;
+
     line-height: 1.4;
+
 }
+
 
 #penalty-timer {
+
     position: absolute;
+
     top: 50%;
+
     left: 50%;
-    transform: translate(-50%, -50%);
+
+    transform:
+        translate(-50%, -50%);
+
     color: #ff4444;
+
     font-size: 35px;
+
     font-weight: bold;
+
     display: none;
+
     text-align: center;
-    background: rgba(0,0,0,0.85);
+
+    background:
+        rgba(0,0,0,0.85);
+
     padding: 20px;
+
     border-radius: 15px;
+
     z-index: 20;
+
 }
+
 
 #win-screen {
+
     position: absolute;
+
     top: 50%;
+
     left: 50%;
-    transform: translate(-50%, -50%);
+
+    transform:
+        translate(-50%, -50%);
+
     background: white;
+
     padding: 25px;
+
     border-radius: 15px;
+
     text-align: center;
+
     display: none;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+
+    box-shadow:
+        0 0 25px rgba(0,0,0,0.5);
+
     z-index: 30;
+
 }
 
+
 .btn {
+
     background: #2ecc71;
+
     color: white;
+
     border: none;
+
     padding: 12px 24px;
+
     border-radius: 6px;
+
     cursor: pointer;
+
     font-weight: bold;
+
     margin-top: 12px;
+
 }
 
 </style>
 
 </head>
 
+
 <body>
 
+
 <div id="game-container">
+
 
     <button id="fullscreen-btn">
         📱 FULLSCREEN
     </button>
 
+
     <div id="ui">
 
-        <div style="
-            color: #ffeb3b;
-            font-size: 12px;
-            margin-bottom: 4px;
-            background: rgba(0,0,0,0.4);
-            padding: 4px 8px;
-            border-radius: 4px;
-        ">
+        <div
+            style="
+                color: #ffeb3b;
+                font-size: 12px;
+                margin-bottom: 4px;
+                background: rgba(0,0,0,0.4);
+                padding: 4px 8px;
+                border-radius: 4px;
+            "
+        >
+
             🎮 <b>Muelle de Juan:</b>
             Pesca 10 Juanes.
-            Velocidad de caña CONSTANTE.
+            Velocidad de caña constante.
             ¡Cuidado con el radar!
+
         </div>
 
-        <div>
-            👤 Puntos Juan:
-            <span id="score">0</span> / 10
 
-            <span id="acid-indicator"
-                  style="
+        <div>
+
+            👤 Puntos Juan:
+
+            <span id="score">
+                0
+            </span>
+
+            / 10
+
+            <span
+                id="acid-indicator"
+                style="
                     color:#2ecc71;
                     font-weight:bold;
                     display:none;
-                  ">
+                "
+            >
+
                 ⚠️ LLUVIA ÁCIDA
+
             </span>
+
         </div>
 
+
         <div>
+
             ⏱️ Tiempo:
-            <span id="clock">0.0</span>s
+
+            <span id="clock">
+                0.0
+            </span>s
+
         </div>
+
 
         <div>
+
             🐟 Bultos:
-            <span id="pop-count">0</span> / 20
+
+            <span id="pop-count">
+                0
+            </span>
+
+            / 20
+
         </div>
 
-        <div id="instruction-text"
-             style="
+
+        <div
+            id="instruction-text"
+            style="
                 color: #ffeb3b;
                 margin-top: 2px;
-             ">
+            "
+        >
+
             Toca para fijar el ÁNGULO
+
         </div>
 
     </div>
@@ -962,7 +1178,9 @@ body {
 
         <br>
 
-        <span id="p-seconds">5</span>s
+        <span id="p-seconds">
+            5
+        </span>s
 
     </div>
 
@@ -975,15 +1193,20 @@ body {
 
         <p id="final-time-text"></p>
 
-        <button id="save-pesca-btn"
-                class="btn">
+        <button
+            id="save-pesca-btn"
+            class="btn"
+        >
+
             💾 Registrar Récord
+
         </button>
 
     </div>
 
 
     <canvas id="game-canvas"></canvas>
+
 
 </div>
 
@@ -995,115 +1218,200 @@ body {
 // --- CANVAS
 // ==============================================================================
 
-const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d');
+const canvas =
+    document.getElementById(
+        'game-canvas'
+    );
 
-const scoreEl = document.getElementById('score');
-const clockEl = document.getElementById('clock');
-const popEl = document.getElementById('pop-count');
+const ctx =
+    canvas.getContext('2d');
 
-const winScreen = document.getElementById('win-screen');
-const penaltyEl = document.getElementById('penalty-timer');
-const pSecondsEl = document.getElementById('p-seconds');
 
-const giantAlert = document.getElementById('giant-alert');
-const fsBtn = document.getElementById('fullscreen-btn');
-const container = document.getElementById('game-container');
+const scoreEl =
+    document.getElementById(
+        'score'
+    );
 
-const acidIndicator = document.getElementById('acid-indicator');
+const clockEl =
+    document.getElementById(
+        'clock'
+    );
+
+const popEl =
+    document.getElementById(
+        'pop-count'
+    );
+
+
+const winScreen =
+    document.getElementById(
+        'win-screen'
+    );
+
+const penaltyEl =
+    document.getElementById(
+        'penalty-timer'
+    );
+
+const pSecondsEl =
+    document.getElementById(
+        'p-seconds'
+    );
+
+
+const giantAlert =
+    document.getElementById(
+        'giant-alert'
+    );
+
+const fsBtn =
+    document.getElementById(
+        'fullscreen-btn'
+    );
+
+const container =
+    document.getElementById(
+        'game-container'
+    );
+
+
+const acidIndicator =
+    document.getElementById(
+        'acid-indicator'
+    );
 
 
 // ==============================================================================
-// --- DIMENSIONES
+// --- TAMAÑO
 // ==============================================================================
 
 let width = 800;
+
 let height = 500;
 
 
 function resizeGame() {
 
-    if (document.fullscreenElement) {
+    if (
+        document.fullscreenElement
+    ) {
 
-        width = window.innerWidth;
-        height = window.innerHeight;
+        width =
+            window.innerWidth;
 
-        canvas.style.height = height + "px";
+        height =
+            window.innerHeight;
+
+        canvas.style.height =
+            height + "px";
 
     } else {
 
-        width = container.offsetWidth || 800;
+        width =
+            container.offsetWidth ||
+            800;
+
         height = 500;
 
-        canvas.style.height = "500px";
+        canvas.style.height =
+            "500px";
+
     }
 
-    canvas.width = width;
-    canvas.height = height;
+
+    canvas.width =
+        width;
+
+    canvas.height =
+        height;
+
 }
 
 
-window.addEventListener('resize', resizeGame);
+window.addEventListener(
+    'resize',
+    resizeGame
+);
 
-setTimeout(resizeGame, 150);
+
+setTimeout(
+    resizeGame,
+    150
+);
 
 
 // ==============================================================================
 // --- FULLSCREEN
 // ==============================================================================
 
-fsBtn.addEventListener('click', async (e) => {
+fsBtn.addEventListener(
+    'click',
+    async (e) => {
 
-    e.stopPropagation();
+        e.stopPropagation();
 
-    try {
+        try {
 
-        if (!document.fullscreenElement) {
+            if (
+                !document.fullscreenElement
+            ) {
 
-            if (container.requestFullscreen) {
-                await container.requestFullscreen();
+                if (
+                    container.requestFullscreen
+                ) {
+
+                    await
+                        container.requestFullscreen();
+
+                }
+
+            } else {
+
+                document.exitFullscreen();
+
             }
 
-        } else {
+        } catch (err) {
 
-            document.exitFullscreen();
+            console.error(err);
 
         }
 
-    } catch (err) {
-
-        console.error(err);
-
     }
-
-});
+);
 
 
 // ==============================================================================
-// --- IMAGEN
+// --- IMAGEN JUAN
 // ==============================================================================
 
-const juanImg = new Image();
+const juanImg =
+    new Image();
 
 let imageLoaded = false;
+
 
 juanImg.src =
     "data:image/png;base64,{{JUAN_IMAGE_BASE64}}";
 
+
 juanImg.onload = () => {
+
     imageLoaded = true;
+
 };
 
 
 // ==============================================================================
-// --- ESTADO DEL JUEGO
+// --- VARIABLES DEL JUEGO
 // ==============================================================================
 
 let score = 0;
 
 let accumulatedTime = 0;
 
-let lastTimeCheck = Date.now();
+let lastTimeCheck =
+    Date.now();
 
 let isGameOver = false;
 
@@ -1118,49 +1426,54 @@ let globalPauseUntil = 0;
 // --- CONTROL DE LA CAÑA
 // ==============================================================================
 
-let inputState = 'angle';
+let inputState =
+    'angle';
 
-let angleParam = 0.5;
+let angleParam =
+    0.5;
 
-let fixedAngle = 0;
+let fixedAngle =
+    0;
 
-let chargeForce = 0;
+let chargeForce =
+    0;
 
 
 // ==============================================================================
 // ⭐ VELOCIDAD CONSTANTE DE LA CAÑA
 // ==============================================================================
 //
-// Este valor controla exclusivamente la velocidad de movimiento
-// del indicador de ángulo.
+// ESTA ES LA ÚNICA CIFRA QUE NECESITAS CAMBIAR
+// PARA HACER LA CAÑA MÁS RÁPIDA O MÁS LENTA.
 //
-// Antes:
+// 0.06 = velocidad actual.
 //
-//     angleSpeed = getRandomSpeed(...)
+// La magnitud siempre será 0.06.
+// Solo cambia el signo (+/-) cuando rebota.
 //
-// Ahora:
-//
-//     angleSpeed = ANGLE_SPEED
-//
-// No cambia durante la partida.
 // ==============================================================================
 
 const ANGLE_SPEED = 0.06;
 
-let angleSpeed = ANGLE_SPEED;
+let angleSpeed =
+    ANGLE_SPEED;
 
 
 // ==============================================================================
-// --- UTILIDAD DE VELOCIDADES
+// --- VELOCIDADES ALEATORIAS DE LOS OBJETOS
 // ==============================================================================
 
 function getRandomSpeed(a, b) {
 
-    let val = Math.random() * (b - a) + a;
+    let val =
+        Math.random() *
+        (b - a) +
+        a;
 
     return Math.random() < 0.5
         ? val
         : -val;
+
 }
 
 
@@ -1171,11 +1484,17 @@ function getRandomSpeed(a, b) {
 let heli = {
 
     x: 100,
+
     y: 35,
+
     vx: 4,
+
     nextChange: 0,
+
     radarWidth: 90,
+
     active: true,
+
     reactiveTime: 0
 
 };
@@ -1190,6 +1509,7 @@ let patera = {
     active: false,
 
     x: 0,
+
     y: 0,
 
     startX: 0,
@@ -1198,7 +1518,8 @@ let patera = {
 
     maxVx: 2.0,
 
-    spawnTimer: Date.now() + 15000,
+    spawnTimer:
+        Date.now() + 15000,
 
     direction: 'right',
 
@@ -1218,7 +1539,8 @@ let nextWaveSpawn = 0;
 
 let acidRainActive = false;
 
-let nextAcidEvent = Date.now() + 25000;
+let nextAcidEvent =
+    Date.now() + 25000;
 
 let acidEndTime = 0;
 
@@ -1235,35 +1557,47 @@ function triggerGiantAlert(
 ) {
 
     giantAlert.innerHTML =
-        message.replace(/\\n/g, "<br>");
+        message.replace(
+            /\\n/g,
+            "<br>"
+        );
+
 
     giantAlert.style.borderColor =
         borderColor;
 
+
     giantAlert.style.display =
         'block';
+
 
     globalPauseUntil =
         Date.now() + 2500;
 
-    setTimeout(() => {
 
-        giantAlert.style.display =
-            'none';
+    setTimeout(
+        () => {
 
-    }, 2500);
+            giantAlert.style.display =
+                'none';
+
+        },
+        2500
+    );
 
 }
 
 
 // ==============================================================================
-// --- TIPOS DE OBJETO
+// --- TIPOS DE OBJETOS
 // ==============================================================================
 
 const TYPES = {
 
     JUAN: 'juan',
+
     BALL: 'ball',
+
     CARD: 'card'
 
 };
@@ -1298,30 +1632,42 @@ function countJuanines() {
 
 function spawnObject() {
 
-    if (objects.length >= 20) {
+    if (
+        objects.length >= 20
+    ) {
+
         return;
+
     }
 
 
     let totalJuanesTarget =
-        Math.round(objects.length * 0.30);
+        Math.round(
+            objects.length * 0.30
+        );
+
 
     let currentJuanes =
-        countType(TYPES.JUAN);
+        countType(
+            TYPES.JUAN
+        );
 
 
     let type;
 
 
     if (
-        currentJuanes < totalJuanesTarget ||
+        currentJuanes <
+            totalJuanesTarget
+        ||
         (
             objects.length === 0 &&
             Math.random() < 0.30
         )
     ) {
 
-        type = TYPES.JUAN;
+        type =
+            TYPES.JUAN;
 
     } else {
 
@@ -1333,20 +1679,29 @@ function spawnObject() {
     }
 
 
-    let assignJuanin = false;
+    let assignJuanin =
+        false;
 
 
-    if (type === TYPES.JUAN) {
+    if (
+        type === TYPES.JUAN
+    ) {
 
         let currentJuaninesCount =
             countJuanines();
 
+
         if (
             currentJuaninesCount <
-            Math.round((currentJuanes + 1) * 0.70)
+            Math.round(
+                (
+                    currentJuanes + 1
+                ) * 0.70
+            )
         ) {
 
-            assignJuanin = true;
+            assignJuanin =
+                true;
 
         }
 
@@ -1368,32 +1723,47 @@ function spawnObject() {
 
 
     let randomVx =
-        getRandomSpeed(1.5, 2);
+        getRandomSpeed(
+            1.5,
+            2
+        );
 
 
     let randomDepthSpeed =
-        getRandomSpeed(0.04, 0.09);
+        getRandomSpeed(
+            0.04,
+            0.09
+        );
 
 
     objects.push({
 
-        id: Math.random().toString(36),
+        id:
+            Math.random().toString(36),
 
-        x: Math.random() * width,
+        x:
+            Math.random() * width,
 
-        depthPercent: randomDepthPct,
+        depthPercent:
+            randomDepthPct,
 
-        y: 0,
+        y:
+            0,
 
-        type: type,
+        type:
+            type,
 
-        isJuanin: assignJuanin,
+        isJuanin:
+            assignJuanin,
 
-        vx: randomVx,
+        vx:
+            randomVx,
 
-        ax: 0,
+        ax:
+            0,
 
-        depthSpeed: randomDepthSpeed,
+        depthSpeed:
+            randomDepthSpeed,
 
         depthAmp:
             12 +
@@ -1401,28 +1771,43 @@ function spawnObject() {
 
         phase:
             Math.random() *
-            Math.PI * 2,
+            Math.PI *
+            2,
 
-        spawnTime: Date.now(),
+        spawnTime:
+            Date.now(),
 
-        discovered: isDiscovered,
+        discovered:
+            isDiscovered,
 
-        lastDirectionChange: Date.now(),
+        lastDirectionChange:
+            Date.now(),
 
         changeInterval:
             300 +
             Math.random() * 600,
 
         deathTime:
-            Date.now() + maxLifeTime
+            Date.now() +
+            maxLifeTime
 
     });
 
 }
 
 
-for (let i = 12; i > 0; i--) {
+// ==============================================================================
+// --- OBJETOS INICIALES
+// ==============================================================================
+
+for (
+    let i = 12;
+    i > 0;
+    i--
+) {
+
     spawnObject();
+
 }
 
 
@@ -1437,14 +1822,18 @@ let nextSpawnTime =
 let hook = {
 
     x: 0,
+
     y: 0,
 
     vx: 0,
+
     vy: 0,
 
-    mode: 'straight',
+    mode:
+        'straight',
 
     targetX: 0,
+
     targetY: 0
 
 };
@@ -1456,23 +1845,33 @@ let hook = {
 
 function triggerAcidRainStrike() {
 
-    acidRainActive = true;
+    acidRainActive =
+        true;
+
 
     acidEndTime =
         Date.now() + 6000;
+
 
     acidIndicator.style.display =
         'inline';
 
 
-    if (objects.length > 0) {
+    if (
+        objects.length > 0
+    ) {
 
         let countToKill =
-            Math.floor(objects.length * 0.5);
+            Math.floor(
+                objects.length * 0.5
+            );
+
 
         objects.sort(
-            () => Math.random() - 0.5
+            () =>
+                Math.random() - 0.5
         );
+
 
         objects.splice(
             0,
@@ -1497,24 +1896,39 @@ function triggerAcidRainStrike() {
 
 function update() {
 
-    const now = Date.now();
+    const now =
+        Date.now();
+
 
     let deltaTime =
-        now - lastTimeCheck;
+        now -
+        lastTimeCheck;
 
-    lastTimeCheck = now;
+
+    lastTimeCheck =
+        now;
 
 
-    if (isGameOver) {
+    if (
+        isGameOver
+    ) {
+
         return;
+
     }
 
 
     let seaTopBoundary =
         height * 0.35;
 
-    if (seaTopBoundary < 180) {
-        seaTopBoundary = 180;
+
+    if (
+        seaTopBoundary < 180
+    ) {
+
+        seaTopBoundary =
+            180;
+
     }
 
 
@@ -1537,10 +1951,13 @@ function update() {
         now > acidEndTime
     ) {
 
-        acidRainActive = false;
+        acidRainActive =
+            false;
+
 
         acidIndicator.style.display =
             'none';
+
 
         nextAcidEvent =
             now +
@@ -1557,9 +1974,11 @@ function update() {
 
         acidDrops.push({
 
-            x: Math.random() * width,
+            x:
+                Math.random() * width,
 
-            y: 0,
+            y:
+                0,
 
             speed:
                 10 +
@@ -1579,11 +1998,15 @@ function update() {
         acidDrops[d].y +=
             acidDrops[d].speed;
 
+
         if (
             acidDrops[d].y > height
         ) {
 
-            acidDrops.splice(d, 1);
+            acidDrops.splice(
+                d,
+                1
+            );
 
         }
 
@@ -1599,19 +2022,28 @@ function update() {
         now > heli.reactiveTime
     ) {
 
-        heli.active = true;
+        heli.active =
+            true;
 
-        heli.x = 100;
+        heli.x =
+            100;
 
     }
 
 
-    if (heli.active) {
+    if (
+        heli.active
+    ) {
 
-        if (now > heli.nextChange) {
+        if (
+            now > heli.nextChange
+        ) {
 
             heli.vx =
-                getRandomSpeed(3, 8);
+                getRandomSpeed(
+                    3,
+                    8
+                );
 
             heli.nextChange =
                 now +
@@ -1621,20 +2053,29 @@ function update() {
         }
 
 
-        heli.x += heli.vx;
+        heli.x +=
+            heli.vx;
 
 
-        if (heli.x < 40) {
+        if (
+            heli.x < 40
+        ) {
 
             heli.x = 40;
+
             heli.vx *= -1;
 
         }
 
 
-        if (heli.x > width - 40) {
+        if (
+            heli.x >
+            width - 40
+        ) {
 
-            heli.x = width - 40;
+            heli.x =
+                width - 40;
+
             heli.vx *= -1;
 
         }
@@ -1651,29 +2092,41 @@ function update() {
         now > patera.spawnTimer
     ) {
 
-        patera.active = true;
+        patera.active =
+            true;
+
 
         patera.y =
             seaTopBoundary - 8;
 
+
         waves = [];
+
 
         nextWaveSpawn =
             now + 1000;
 
 
-        if (Math.random() > 0.5) {
+        if (
+            Math.random() > 0.5
+        ) {
 
-            patera.x = -45;
+            patera.x =
+                -45;
 
-            patera.startX = -45;
+            patera.startX =
+                -45;
 
-            patera.baseVx = 0.8;
+            patera.baseVx =
+                0.8;
 
-            patera.direction = 'left';
+            patera.direction =
+                'left';
+
 
             angleParam =
                 Math.PI * 1.2;
+
 
         } else {
 
@@ -1683,14 +2136,23 @@ function update() {
             patera.startX =
                 width + 45;
 
-            patera.baseVx = -0.8;
+            patera.baseVx =
+                -0.8;
 
-            patera.direction = 'right';
+            patera.direction =
+                'right';
+
 
             angleParam =
                 Math.PI * 1.7;
 
         }
+
+
+        // Aseguramos que la caña siga moviéndose
+        // en el sentido correcto al iniciar la patera.
+        angleSpeed =
+            ANGLE_SPEED;
 
 
         triggerGiantAlert(
@@ -1711,20 +2173,25 @@ function update() {
             width / 2;
 
 
-        if (now > nextWaveSpawn) {
+        if (
+            now > nextWaveSpawn
+        ) {
 
             waves.push({
 
-                x: center,
+                x:
+                    center,
 
-                y: seaTopBoundary,
+                y:
+                    seaTopBoundary,
 
                 vx:
                     patera.direction === 'left'
                         ? -1.8
                         : 1.8,
 
-                size: 7
+                size:
+                    7
 
             });
 
@@ -1744,9 +2211,13 @@ function update() {
             let wave =
                 waves[w];
 
-            wave.x += wave.vx;
 
-            wave.size += 0.05;
+            wave.x +=
+                wave.vx;
+
+
+            wave.size +=
+                0.05;
 
 
             let distanceToPatera =
@@ -1756,9 +2227,12 @@ function update() {
                 );
 
 
-            if (distanceToPatera < 15) {
+            if (
+                distanceToPatera < 15
+            ) {
 
-                let fixedPush = 30;
+                let fixedPush =
+                    30;
 
 
                 if (
@@ -1768,7 +2242,8 @@ function update() {
                     patera.x =
                         Math.max(
                             patera.startX,
-                            patera.x - fixedPush
+                            patera.x -
+                                fixedPush
                         );
 
                 } else {
@@ -1776,7 +2251,8 @@ function update() {
                     patera.x =
                         Math.min(
                             patera.startX,
-                            patera.x + fixedPush
+                            patera.x +
+                                fixedPush
                         );
 
                 }
@@ -1785,7 +2261,12 @@ function update() {
                 patera.hitFlash =
                     now + 250;
 
-                waves.splice(w, 1);
+
+                waves.splice(
+                    w,
+                    1
+                );
+
 
                 continue;
 
@@ -1797,7 +2278,10 @@ function update() {
                 wave.x > width + 60
             ) {
 
-                waves.splice(w, 1);
+                waves.splice(
+                    w,
+                    1
+                );
 
             }
 
@@ -1837,7 +2321,8 @@ function update() {
             );
 
 
-        patera.x += currentSpeed;
+        patera.x +=
+            currentSpeed;
 
 
         if (
@@ -1852,14 +2337,19 @@ function update() {
             )
         ) {
 
-            patera.active = false;
+            patera.active =
+                false;
 
             waves = [];
+
 
             patera.spawnTimer =
                 now + 45000;
 
-            score = 0;
+
+            score =
+                0;
+
 
             scoreEl.innerText =
                 score;
@@ -1881,7 +2371,7 @@ function update() {
 
 
     // --------------------------------------------------------------------------
-    // PAUSA GLOBAL
+    // PAUSA
     // --------------------------------------------------------------------------
 
     if (
@@ -1904,12 +2394,19 @@ function update() {
         penaltyEl.style.display =
             'block';
 
+
         pSecondsEl.innerText =
             Math.ceil(
-                (penaltyTime - now) / 1000
+                (
+                    penaltyTime -
+                    now
+                ) / 1000
             );
 
-        inputState = 'angle';
+
+        inputState =
+            'angle';
+
 
         return;
 
@@ -1928,9 +2425,11 @@ function update() {
     accumulatedTime +=
         deltaTime;
 
+
     clockEl.innerText =
         (
-            accumulatedTime / 1000
+            accumulatedTime /
+            1000
         ).toFixed(1);
 
 
@@ -1939,54 +2438,67 @@ function update() {
 
 
     // ==========================================================================
-    // ⭐ MOVIMIENTO DE LA CAÑA
+    // ⭐ CAÑA: VELOCIDAD CONSTANTE + REBOTE CORRECTO
     // ==========================================================================
     //
-    // AQUÍ ESTÁ EL CAMBIO PRINCIPAL.
+    // La velocidad absoluta siempre es ANGLE_SPEED.
     //
-    // La velocidad NO se recalcula.
-    // No usamos Math.random().
-    // No cambia al rebotar.
-    // No cambia después de lanzar.
+    // Cuando llega a un extremo:
     //
-    // ANGLE_SPEED = 0.06
+    //      +0.06  ->  -0.06
     //
-    // Puedes cambiar únicamente esa constante de arriba.
+    // o:
+    //
+    //      -0.06  ->  +0.06
+    //
+    // De esta forma nunca se queda clavada.
     // ==========================================================================
 
-    if (inputState === 'angle') {
+    if (
+        inputState === 'angle'
+    ) {
 
-        angleParam += ANGLE_SPEED;
+        angleParam +=
+            angleSpeed;
 
 
-        if (patera.active) {
+        if (
+            patera.active
+        ) {
+
+            // ------------------------------------------------------------------
+            // PATERA HACIA LA IZQUIERDA
+            // Rango angular: π → 1.5π
+            // ------------------------------------------------------------------
 
             if (
                 patera.direction === 'left'
             ) {
 
-                let minLimit =
+                const minLimit =
                     Math.PI;
 
-                let maxLimit =
+                const maxLimit =
                     Math.PI * 1.5;
 
 
                 if (
-                    angleParam > maxLimit
+                    angleParam >=
+                    maxLimit
                 ) {
 
                     angleParam =
                         maxLimit;
 
                     angleSpeed =
-                        ANGLE_SPEED;
+                        -ANGLE_SPEED;
 
                 }
 
 
                 if (
-                    angleParam < minLimit
+                    angleParam <=
+                    minLimit
                 ) {
 
                     angleParam =
@@ -1997,30 +2509,38 @@ function update() {
 
                 }
 
+
+            // ------------------------------------------------------------------
+            // PATERA HACIA LA DERECHA
+            // Rango angular: 1.5π → 2π
+            // ------------------------------------------------------------------
+
             } else {
 
-                let minLimit =
+                const minLimit =
                     Math.PI * 1.5;
 
-                let maxLimit =
+                const maxLimit =
                     Math.PI * 2;
 
 
                 if (
-                    angleParam > maxLimit
+                    angleParam >=
+                    maxLimit
                 ) {
 
                     angleParam =
                         maxLimit;
 
                     angleSpeed =
-                        ANGLE_SPEED;
+                        -ANGLE_SPEED;
 
                 }
 
 
                 if (
-                    angleParam < minLimit
+                    angleParam <=
+                    minLimit
                 ) {
 
                     angleParam =
@@ -2033,26 +2553,42 @@ function update() {
 
             }
 
+
+        // ----------------------------------------------------------------------
+        // MODO NORMAL
+        // Rango angular: 0 → π
+        // ----------------------------------------------------------------------
+
         } else {
 
+            const minLimit =
+                0;
+
+            const maxLimit =
+                Math.PI;
+
+
             if (
-                angleParam > Math.PI
+                angleParam >=
+                maxLimit
             ) {
 
                 angleParam =
-                    Math.PI;
+                    maxLimit;
 
                 angleSpeed =
-                    ANGLE_SPEED;
+                    -ANGLE_SPEED;
 
             }
 
 
             if (
-                angleParam < 0
+                angleParam <=
+                minLimit
             ) {
 
-                angleParam = 0;
+                angleParam =
+                    minLimit;
 
                 angleSpeed =
                     ANGLE_SPEED;
@@ -2065,7 +2601,7 @@ function update() {
 
 
     // --------------------------------------------------------------------------
-    // FUERZA
+    // CARGAR FUERZA
     // --------------------------------------------------------------------------
 
     if (
@@ -2105,7 +2641,7 @@ function update() {
 
 
     // --------------------------------------------------------------------------
-    // PROPORCIÓN DE JUANES
+    // PROPORCIÓN JUANES
     // --------------------------------------------------------------------------
 
     let totalJuanesTarget =
@@ -2115,12 +2651,14 @@ function update() {
 
 
     let currentJuanes =
-        countType(TYPES.JUAN);
+        countType(
+            TYPES.JUAN
+        );
 
 
     if (
         currentJuanes <
-        totalJuanesTarget &&
+            totalJuanesTarget &&
         objects.length > 0
     ) {
 
@@ -2185,9 +2723,12 @@ function update() {
             let j of currentJuanesList
         ) {
 
-            if (!j.isJuanin) {
+            if (
+                !j.isJuanin
+            ) {
 
-                j.isJuanin = true;
+                j.isJuanin =
+                    true;
 
                 actualJuanines++;
 
@@ -2214,9 +2755,12 @@ function update() {
             let j of currentJuanesList
         ) {
 
-            if (j.isJuanin) {
+            if (
+                j.isJuanin
+            ) {
 
-                j.isJuanin = false;
+                j.isJuanin =
+                    false;
 
                 actualJuanines--;
 
@@ -2262,9 +2806,12 @@ function update() {
             let o of objects
         ) {
 
-            if (!o.discovered) {
+            if (
+                !o.discovered
+            ) {
 
-                o.discovered = true;
+                o.discovered =
+                    true;
 
                 totalDiscovered++;
 
@@ -2286,7 +2833,7 @@ function update() {
 
 
     // --------------------------------------------------------------------------
-    // MOVIMIENTO OBJETOS
+    // MOVIMIENTO DE OBJETOS
     // --------------------------------------------------------------------------
 
     for (
@@ -2299,7 +2846,8 @@ function update() {
             objects[i];
 
 
-        obj.x += obj.vx;
+        obj.x +=
+            obj.vx;
 
 
         if (
@@ -2333,7 +2881,11 @@ function update() {
             now > obj.deathTime
         ) {
 
-            objects.splice(i, 1);
+            objects.splice(
+                i,
+                1
+            );
+
 
             spawnObject();
 
@@ -2351,23 +2903,31 @@ function update() {
     ) {
 
         if (
-            hook.mode === 'parabolic'
+            hook.mode ===
+            'parabolic'
         ) {
 
-            hook.x += hook.vx;
+            hook.x +=
+                hook.vx;
 
-            hook.vy += 0.5;
 
-            hook.y += hook.vy;
+            hook.vy +=
+                0.5;
+
+
+            hook.y +=
+                hook.vy;
 
 
             if (
                 patera.active &&
                 Math.abs(
-                    hook.x - patera.x
+                    hook.x -
+                    patera.x
                 ) < 28 &&
                 Math.abs(
-                    hook.y - patera.y
+                    hook.y -
+                    patera.y
                 ) < 22
             ) {
 
@@ -2379,15 +2939,18 @@ function update() {
 
 
             if (
-                hook.y >= seaTopBoundary
+                hook.y >=
+                seaTopBoundary
             ) {
 
                 hook.mode =
                     'straight';
 
+
                 hook.targetX =
                     hook.x +
                     hook.vx * 5;
+
 
                 hook.targetY =
                     height - 30;
@@ -2413,6 +2976,7 @@ function update() {
                 hook.targetX -
                 hook.x;
 
+
             let dy =
                 hook.targetY -
                 hook.y;
@@ -2425,9 +2989,12 @@ function update() {
                 );
 
 
-            let targetHit = null;
+            let targetHit =
+                null;
 
-            let hitIndex = -1;
+
+            let hitIndex =
+                -1;
 
 
             for (
@@ -2463,9 +3030,11 @@ function update() {
                     ) < activeSize
                 ) {
 
-                    targetHit = o;
+                    targetHit =
+                        o;
 
-                    hitIndex = i;
+                    hitIndex =
+                        i;
 
                     break;
 
@@ -2474,7 +3043,9 @@ function update() {
             }
 
 
-            if (targetHit) {
+            if (
+                targetHit
+            ) {
 
                 processCatch(
                     targetHit,
@@ -2487,12 +3058,15 @@ function update() {
 
                 hook.x +=
                     (
-                        dx / dist
+                        dx /
+                        dist
                     ) * 22;
+
 
                 hook.y +=
                     (
-                        dy / dist
+                        dy /
+                        dist
                     ) * 22;
 
             } else {
@@ -2506,16 +3080,21 @@ function update() {
 
 
     } else if (
-        inputState === 'returning'
+        inputState ===
+        'returning'
     ) {
 
         let dx =
-            (width / 2) -
+            (
+                width / 2
+            ) -
             hook.x;
 
 
         let dy =
-            (seaTopBoundary - 15) -
+            (
+                seaTopBoundary - 15
+            ) -
             hook.y;
 
 
@@ -2532,12 +3111,15 @@ function update() {
 
             hook.x +=
                 (
-                    dx / dist
+                    dx /
+                    dist
                 ) * 30;
+
 
             hook.y +=
                 (
-                    dy / dist
+                    dy /
+                    dist
                 ) * 30;
 
         } else {
@@ -2546,19 +3128,125 @@ function update() {
                 'angle';
 
 
-            // ⭐ NO SE RANDOMIZA LA VELOCIDAD
-            angleSpeed =
-                ANGLE_SPEED;
+            // IMPORTANTE:
+            // no ponemos siempre +ANGLE_SPEED.
+            // Conservamos el sentido que llevaba la caña.
 
+            angleSpeed =
+                angleSpeed >= 0
+                    ? ANGLE_SPEED
+                    : -ANGLE_SPEED;
+
+
+            // Si el ángulo queda exactamente en un límite,
+            // nos aseguramos de que salga hacia dentro.
 
             if (
-                angleParam > Math.PI
+                !patera.active
             ) {
 
-                angleParam =
+                if (
+                    angleParam >= Math.PI
+                ) {
+
+                    angleParam =
+                        Math.PI;
+
+                    angleSpeed =
+                        -ANGLE_SPEED;
+
+                }
+
+
+                if (
+                    angleParam <= 0
+                ) {
+
+                    angleParam =
+                        0;
+
+                    angleSpeed =
+                        ANGLE_SPEED;
+
+                }
+
+            } else {
+
+                if (
                     patera.direction === 'left'
-                        ? Math.PI * 1.2
-                        : Math.PI * 1.7;
+                ) {
+
+                    const minLimit =
+                        Math.PI;
+
+                    const maxLimit =
+                        Math.PI * 1.5;
+
+
+                    if (
+                        angleParam >=
+                        maxLimit
+                    ) {
+
+                        angleParam =
+                            maxLimit;
+
+                        angleSpeed =
+                            -ANGLE_SPEED;
+
+                    }
+
+
+                    if (
+                        angleParam <=
+                        minLimit
+                    ) {
+
+                        angleParam =
+                            minLimit;
+
+                        angleSpeed =
+                            ANGLE_SPEED;
+
+                    }
+
+                } else {
+
+                    const minLimit =
+                        Math.PI * 1.5;
+
+                    const maxLimit =
+                        Math.PI * 2;
+
+
+                    if (
+                        angleParam >=
+                        maxLimit
+                    ) {
+
+                        angleParam =
+                            maxLimit;
+
+                        angleSpeed =
+                            -ANGLE_SPEED;
+
+                    }
+
+
+                    if (
+                        angleParam <=
+                        minLimit
+                    ) {
+
+                        angleParam =
+                            minLimit;
+
+                        angleSpeed =
+                            ANGLE_SPEED;
+
+                    }
+
+                }
 
             }
 
@@ -2575,15 +3263,20 @@ function update() {
 
 function processPateraCatch() {
 
-    patera.active = false;
+    patera.active =
+        false;
+
 
     waves = [];
+
 
     patera.spawnTimer =
         Date.now() + 60000;
 
 
-    heli.active = false;
+    heli.active =
+        false;
+
 
     heli.reactiveTime =
         Date.now() + 60000;
@@ -2594,6 +3287,7 @@ function processPateraCatch() {
 
 
     score += 2;
+
 
     scoreEl.innerText =
         score;
@@ -2611,7 +3305,9 @@ function processPateraCatch() {
         score >= 10
     ) {
 
-        isGameOver = true;
+        isGameOver =
+            true;
+
 
         setTimeout(
             win,
@@ -2637,21 +3333,27 @@ function processCatch(
         1
     );
 
+
     spawnObject();
+
 
     inputState =
         'returning';
 
 
     if (
-        obj.type === TYPES.JUAN
+        obj.type ===
+        TYPES.JUAN
     ) {
 
-        if (obj.isJuanin) {
+        if (
+            obj.isJuanin
+        ) {
 
             let xMinRadar =
                 heli.x -
                 heli.radarWidth;
+
 
             let xMaxRadar =
                 heli.x +
@@ -2660,8 +3362,10 @@ function processCatch(
 
             if (
                 heli.active &&
-                width / 2 >= xMinRadar &&
-                width / 2 <= xMaxRadar
+                width / 2 >=
+                    xMinRadar &&
+                width / 2 <=
+                    xMaxRadar
             ) {
 
                 let perdidos =
@@ -2670,7 +3374,8 @@ function processCatch(
                     );
 
 
-                score -= perdidos;
+                score -=
+                    perdidos;
 
 
                 if (
@@ -2697,6 +3402,7 @@ function processCatch(
 
                 score += 2;
 
+
                 scoreEl.innerText =
                     score;
 
@@ -2713,6 +3419,7 @@ function processCatch(
         } else {
 
             score++;
+
 
             scoreEl.innerText =
                 score;
@@ -2731,7 +3438,9 @@ function processCatch(
             score >= 10
         ) {
 
-            isGameOver = true;
+            isGameOver =
+                true;
+
 
             setTimeout(
                 win,
@@ -2742,7 +3451,8 @@ function processCatch(
 
 
     } else if (
-        obj.type === TYPES.CARD
+        obj.type ===
+        TYPES.CARD
     ) {
 
         nPenalties++;
@@ -2806,7 +3516,8 @@ function win() {
     ).innerText =
         "¡Completado en " +
         (
-            accumulatedTime / 1000
+            accumulatedTime /
+            1000
         ).toFixed(2) +
         "s!";
 
@@ -2818,14 +3529,17 @@ function win() {
 // ==============================================================================
 
 document
-    .getElementById('save-pesca-btn')
+    .getElementById(
+        'save-pesca-btn'
+    )
     .addEventListener(
         'click',
         () => {
 
             let finalTime =
                 (
-                    accumulatedTime / 1000
+                    accumulatedTime /
+                    1000
                 ).toFixed(2);
 
 
@@ -2839,12 +3553,13 @@ document
 
 
 // ==============================================================================
-// --- DRAW
+// --- DIBUJAR
 // ==============================================================================
 
 function draw() {
 
     update();
+
 
     ctx.clearRect(
         0,
@@ -2928,12 +3643,16 @@ function draw() {
     // LLUVIA ÁCIDA
     // --------------------------------------------------------------------------
 
-    if (acidRainActive) {
+    if (
+        acidRainActive
+    ) {
 
         ctx.strokeStyle =
             'rgba(150, 240, 50, 0.4)';
 
-        ctx.lineWidth = 1.5;
+
+        ctx.lineWidth =
+            1.5;
 
 
         acidDrops.forEach(
@@ -2941,15 +3660,18 @@ function draw() {
 
                 ctx.beginPath();
 
+
                 ctx.moveTo(
                     d.x,
                     d.y
                 );
 
+
                 ctx.lineTo(
                     d.x - 1,
                     d.y + 11
                 );
+
 
                 ctx.stroke();
 
@@ -2972,9 +3694,12 @@ function draw() {
                     : 'rgba(255, 255, 255, 0.75)';
 
 
-            ctx.lineWidth = 2.5;
+            ctx.lineWidth =
+                2.5;
+
 
             ctx.beginPath();
+
 
             ctx.arc(
                 wave.x,
@@ -2984,6 +3709,7 @@ function draw() {
                 0,
                 false
             );
+
 
             ctx.stroke();
 
@@ -2995,7 +3721,9 @@ function draw() {
     // HELICÓPTERO
     // --------------------------------------------------------------------------
 
-    if (heli.active) {
+    if (
+        heli.active
+    ) {
 
         ctx.fillStyle =
             'rgba(255, 235, 59, 0.14)';
@@ -3003,28 +3731,36 @@ function draw() {
 
         ctx.beginPath();
 
+
         ctx.moveTo(
             heli.x,
             heli.y + 10
         );
 
+
         ctx.lineTo(
-            heli.x - heli.radarWidth,
+            heli.x -
+                heli.radarWidth,
             seaLine
         );
 
+
         ctx.lineTo(
-            heli.x + heli.radarWidth,
+            heli.x +
+                heli.radarWidth,
             seaLine
         );
+
 
         ctx.closePath();
+
 
         ctx.fill();
 
 
         ctx.fillStyle =
             '#1e3f20';
+
 
         ctx.fillRect(
             heli.x - 22,
@@ -3037,6 +3773,7 @@ function draw() {
         ctx.fillStyle =
             '#000';
 
+
         ctx.fillRect(
             heli.x - 32,
             heli.y - 12,
@@ -3047,6 +3784,7 @@ function draw() {
 
         ctx.font =
             "10px sans-serif";
+
 
         ctx.fillStyle =
             '#fff';
@@ -3065,7 +3803,9 @@ function draw() {
     // PATERA
     // --------------------------------------------------------------------------
 
-    if (patera.active) {
+    if (
+        patera.active
+    ) {
 
         ctx.fillStyle =
             (
@@ -3078,27 +3818,33 @@ function draw() {
 
         ctx.beginPath();
 
+
         ctx.moveTo(
             patera.x - 22,
             patera.y
         );
+
 
         ctx.lineTo(
             patera.x + 22,
             patera.y
         );
 
+
         ctx.lineTo(
             patera.x + 14,
             patera.y + 14
         );
+
 
         ctx.lineTo(
             patera.x - 14,
             patera.y + 14
         );
 
+
         ctx.closePath();
+
 
         ctx.fill();
 
@@ -3129,6 +3875,7 @@ function draw() {
 
             ctx.beginPath();
 
+
             ctx.arc(
                 obj.x,
                 obj.y,
@@ -3141,7 +3888,8 @@ function draw() {
             if (
                 lifeLeft < 5000 &&
                 Math.floor(
-                    Date.now() / 250
+                    Date.now() /
+                    250
                 ) % 2 === 0
             ) {
 
@@ -3170,7 +3918,9 @@ function draw() {
                     : 'rgba(255,255,255,0.4)';
 
 
-            ctx.lineWidth = 1.5;
+            ctx.lineWidth =
+                1.5;
+
 
             ctx.stroke();
 
@@ -3183,7 +3933,9 @@ function draw() {
 
                 ctx.save();
 
+
                 ctx.beginPath();
+
 
                 ctx.arc(
                     obj.x,
@@ -3192,6 +3944,7 @@ function draw() {
                     0,
                     Math.PI * 2
                 );
+
 
                 ctx.clip();
 
@@ -3221,6 +3974,7 @@ function draw() {
                 ctx.fillStyle =
                     '#fff';
 
+
                 ctx.font =
                     "bold 16px sans-serif";
 
@@ -3238,6 +3992,7 @@ function draw() {
 
                 ctx.fillStyle =
                     '#fff';
+
 
                 ctx.font =
                     "bold 15px sans-serif";
@@ -3271,7 +4026,9 @@ function draw() {
     );
 
 
-    if (imageLoaded) {
+    if (
+        imageLoaded
+    ) {
 
         ctx.drawImage(
             juanImg,
@@ -3288,10 +4045,13 @@ function draw() {
     // RADAR / CAÑA
     // --------------------------------------------------------------------------
 
-    let radarRadius = 55;
+    let radarRadius =
+        55;
+
 
     let radarX =
         width / 2;
+
 
     let radarY =
         seaLine - 15;
@@ -3300,7 +4060,9 @@ function draw() {
     ctx.beginPath();
 
 
-    if (patera.active) {
+    if (
+        patera.active
+    ) {
 
         if (
             patera.direction === 'left'
@@ -3345,33 +4107,42 @@ function draw() {
     ctx.strokeStyle =
         'rgba(255,235,59,0.6)';
 
-    ctx.lineWidth = 2.5;
+
+    ctx.lineWidth =
+        2.5;
+
 
     ctx.stroke();
 
 
     // --------------------------------------------------------------------------
-    // INDICADOR DE ÁNGULO
+    // PUNTO DEL ÁNGULO
     // --------------------------------------------------------------------------
 
     let ballX =
         radarX +
-        Math.cos(angleParam) *
+        Math.cos(
+            angleParam
+        ) *
         radarRadius;
 
 
     let ballY =
         radarY +
-        Math.sin(angleParam) *
+        Math.sin(
+            angleParam
+        ) *
         radarRadius;
 
 
     ctx.beginPath();
 
+
     ctx.moveTo(
         radarX,
         radarY
     );
+
 
     ctx.lineTo(
         ballX,
@@ -3382,12 +4153,16 @@ function draw() {
     ctx.strokeStyle =
         '#ffeb3b';
 
-    ctx.lineWidth = 2.5;
+
+    ctx.lineWidth =
+        2.5;
+
 
     ctx.stroke();
 
 
     ctx.beginPath();
+
 
     ctx.arc(
         ballX,
@@ -3452,10 +4227,12 @@ function draw() {
 
         ctx.beginPath();
 
+
         ctx.moveTo(
             width / 2,
             seaLine - 15
         );
+
 
         ctx.lineTo(
             hook.x,
@@ -3466,12 +4243,16 @@ function draw() {
         ctx.strokeStyle =
             '#ffffff';
 
-        ctx.lineWidth = 2;
+
+        ctx.lineWidth =
+            2;
+
 
         ctx.stroke();
 
 
         ctx.beginPath();
+
 
         ctx.arc(
             hook.x,
@@ -3485,12 +4266,15 @@ function draw() {
         ctx.fillStyle =
             '#e74c3c';
 
+
         ctx.fill();
 
     }
 
 
-    requestAnimationFrame(draw);
+    requestAnimationFrame(
+        draw
+    );
 
 }
 
@@ -3519,10 +4303,13 @@ function handleActionStart() {
         fixedAngle =
             angleParam;
 
+
         inputState =
             'force';
 
-        chargeForce = 0;
+
+        chargeForce =
+            0;
 
     }
 
@@ -3532,145 +4319,150 @@ function handleActionStart() {
 function handleActionEnd() {
 
     if (
-        inputState === 'force'
+        inputState !== 'force'
     ) {
 
-        inputState =
-            'launching';
+        return;
+
+    }
 
 
-        let seaLineBound =
-            height * 0.35;
+    inputState =
+        'launching';
 
 
-        if (
-            seaLineBound < 180
-        ) {
-
-            seaLineBound = 180;
-
-        }
+    let seaLineBound =
+        height * 0.35;
 
 
-        if (
-            fixedAngle >= Math.PI &&
-            patera.active
-        ) {
+    if (
+        seaLineBound < 180
+    ) {
 
-            hook.mode =
-                'parabolic';
+        seaLineBound =
+            180;
+
+    }
 
 
-            let initialVelocity =
-                5 +
+    if (
+        fixedAngle >= Math.PI &&
+        patera.active
+    ) {
+
+        hook.mode =
+            'parabolic';
+
+
+        let initialVelocity =
+            5 +
+            (
+                chargeForce /
+                100
+            ) * 16;
+
+
+        hook.vx =
+            Math.cos(
+                fixedAngle
+            ) *
+            initialVelocity;
+
+
+        hook.vy =
+            Math.sin(
+                fixedAngle
+            ) *
+            initialVelocity;
+
+
+    } else {
+
+        hook.mode =
+            'straight';
+
+
+        let maxReach =
+            Math.sqrt(
                 (
-                    chargeForce /
-                    100
-                ) * 16;
+                    width / 2
+                ) ** 2 +
+                height ** 2
+            ) * 0.95;
 
 
-            hook.vx =
-                Math.cos(
-                    fixedAngle
-                ) *
-                initialVelocity;
+        let currentReach =
+            (
+                chargeForce /
+                100
+            ) *
+            maxReach;
 
 
-            hook.vy =
+        hook.targetX =
+            (
+                width / 2
+            ) +
+            Math.cos(
+                fixedAngle
+            ) *
+            currentReach;
+
+
+        hook.targetY =
+            seaLineBound +
+            Math.abs(
                 Math.sin(
                     fixedAngle
                 ) *
-                initialVelocity;
+                currentReach
+            );
 
 
-        } else {
-
-            hook.mode =
-                'straight';
-
-
-            let maxReach =
-                Math.sqrt(
-                    (
-                        width / 2
-                    ) ** 2 +
-                    height ** 2
-                ) * 0.95;
-
-
-            let currentReach =
-                (
-                    chargeForce /
-                    100
-                ) *
-                maxReach;
-
+        if (
+            hook.targetX < 0
+        ) {
 
             hook.targetX =
-                (
-                    width / 2
-                ) +
-                Math.cos(
-                    fixedAngle
-                ) *
-                currentReach;
-
-
-            hook.targetY =
-                seaLineBound +
-                Math.abs(
-                    Math.sin(
-                        fixedAngle
-                    ) *
-                    currentReach
-                );
-
-
-            if (
-                hook.targetX < 0
-            ) {
-
-                hook.targetX = 15;
-
-            }
-
-
-            if (
-                hook.targetX > width
-            ) {
-
-                hook.targetX =
-                    width - 15;
-
-            }
-
-
-            if (
-                hook.targetY > height
-            ) {
-
-                hook.targetY =
-                    height - 20;
-
-            }
+                15;
 
         }
 
 
-        hook.x =
-            width / 2;
+        if (
+            hook.targetX > width
+        ) {
+
+            hook.targetX =
+                width - 15;
+
+        }
 
 
-        hook.y =
-            seaLineBound - 15;
+        if (
+            hook.targetY > height
+        ) {
+
+            hook.targetY =
+                height - 20;
+
+        }
 
     }
+
+
+    hook.x =
+        width / 2;
+
+
+    hook.y =
+        seaLineBound - 15;
 
 }
 
 
 // ==============================================================================
-// --- EVENTOS
+// --- EVENTOS RATÓN
 // ==============================================================================
 
 container.addEventListener(
@@ -3695,6 +4487,10 @@ window.addEventListener(
     handleActionEnd
 );
 
+
+// ==============================================================================
+// --- EVENTOS TÁCTILES
+// ==============================================================================
 
 container.addEventListener(
     'touchstart',
@@ -3723,27 +4519,35 @@ window.addEventListener(
 
 
 // ==============================================================================
-// --- ARRANCAR
+// --- ARRANQUE
 // ==============================================================================
 
 draw();
 
+
 </script>
 
 </body>
+
 </html>
 """
 
 
 # ==============================================================================
-# --- INSERTAR IMAGEN Y MOSTRAR JUEGO
+# --- INSERTAR IMAGEN
 # ==============================================================================
 html_pesca = html_pesca_template.replace(
     "{{JUAN_IMAGE_BASE64}}",
     img_base64_pesca
 )
 
+
+# ==============================================================================
+# --- MOSTRAR JUEGO
+# ==============================================================================
 components.html(
     html_pesca,
     height=520
 )
+
+
