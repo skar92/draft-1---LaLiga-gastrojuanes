@@ -1116,6 +1116,103 @@ else:
         use_container_width=True
     )
 
+
+
+
+
+# ==============================================================================
+# --- 🏆 RÉCORDS DEL MINIJUEGO ---
+# ==============================================================================
+
+import os
+import json
+import base64
+import streamlit as st
+import streamlit.components.v1 as components
+
+
+RECORDS_FILE = "records_pesca.json"
+
+
+def cargar_records():
+    """
+    Carga los récords guardados.
+
+    Si todavía no existe el archivo,
+    devuelve una lista vacía.
+    """
+
+    try:
+
+        if not os.path.exists(RECORDS_FILE):
+            return []
+
+        with open(
+            RECORDS_FILE,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            records = json.load(f)
+
+        if not isinstance(records, list):
+            return []
+
+        return records
+
+    except Exception:
+
+        return []
+
+
+def guardar_record(nombre, tiempo):
+    """
+    Guarda un nuevo récord.
+    """
+
+    records = cargar_records()
+
+    try:
+        tiempo = float(tiempo)
+    except Exception:
+        return
+
+    records.append(
+        {
+            "nombre": str(nombre),
+            "tiempo": tiempo
+        }
+    )
+
+    # Los mejores tiempos primero
+    records.sort(
+        key=lambda r: float(r.get("tiempo", 999999))
+    )
+
+    # Guardamos únicamente los 20 mejores
+    records = records[:20]
+
+    try:
+
+        with open(
+            RECORDS_FILE,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                records,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
+    except Exception as e:
+
+        st.error(
+            f"No se pudo guardar el récord: {e}"
+        )
+
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
 # ==============================================================================
