@@ -24,7 +24,7 @@ def guardar_ganador(nombre):
 # --- CONFIGURACIÓN DE LOS PARTICIPANTES Y SUS EQUIPOS ---
 porra_equipos = {
     "Ejkar": ["Athletic Club", "Elche"],
-    "Sierra": ["Real Betis"],
+    "Sierra": ["Real Betis", "Málaga"],  # <-- Málaga añadido aquí
     "Vecina": ["Real Sociedad", "Racing"],
     "Mírete": ["Celta", "Levante"],
     "Miguel Ángel": ["Valencia", "Alavés"],
@@ -35,10 +35,10 @@ porra_equipos = {
 
 # --- PUNTOS SUMADOS POR CADA EQUIPO (Actualización Manual) ---
 puntos_equipos_valores = {
-    "Athletic Club": 0, "Elche": 0, "Real Betis": 0, "Real Sociedad": 0,
-    "Racing": 0, "Celta": 0, "Levante": 0, "Valencia": 0, "Alavés": 0,
-    "Getafe": 0, "Rayo Vallecano": 0, "Sevilla": 0, "Osasuna": 0,
-    "Espanyol": 0, "Deportivo": 0,
+    "Athletic Club": 0, "Elche": 0, "Real Betis": 0, "Málaga": 0, 
+    "Real Sociedad": 0, "Racing": 0, "Celta": 0, "Levante": 0, 
+    "Valencia": 0, "Alavés": 0, "Getafe": 0, "Rayo Vallecano": 0, 
+    "Sevilla": 0, "Osasuna": 0, "Espanyol": 0, "Deportivo": 0,
 }
 
 # --- GOLES DE LOS GOLEADORES ELEGIDOS (Actualización Manual) ---
@@ -59,23 +59,24 @@ puntos_apuesta = {
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
 }
 
-# --- URLS DE LOS ESCUDOS (Usando la CDN de ESPN, 100% estable y PNG transparente) ---
-escudos_urls = {
-    "Athletic Club": "https://a.espncdn.com/i/teamlogos/soccer/500/175.png",
-    "Elche": "https://a.espncdn.com/i/teamlogos/soccer/500/3745.png",
-    "Real Betis": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png",
-    "Real Sociedad": "https://a.espncdn.com/i/teamlogos/soccer/500/289.png",
-    "Racing": "https://a.espncdn.com/i/teamlogos/soccer/500/296.png",
-    "Celta": "https://a.espncdn.com/i/teamlogos/soccer/500/176.png",
-    "Levante": "https://a.espncdn.com/i/teamlogos/soccer/500/130.png",
-    "Valencia": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png",
-    "Alavés": "https://a.espncdn.com/i/teamlogos/soccer/500/96.png",
-    "Getafe": "https://a.espncdn.com/i/teamlogos/soccer/500/2922.png",
-    "Rayo Vallecano": "https://a.espncdn.com/i/teamlogos/soccer/500/101.png",
-    "Sevilla": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
-    "Osasuna": "https://a.espncdn.com/i/teamlogos/soccer/500/131.png",
-    "Espanyol": "https://a.espncdn.com/i/teamlogos/soccer/500/177.png",
-    "Deportivo": "https://a.espncdn.com/i/teamlogos/soccer/500/179.png",
+# --- ARCHIVOS LOCALES DE LOS ESCUDOS (Carpeta /img) ---
+escudos_archivos = {
+    "Athletic Club": "img/athletic.png",
+    "Elche": "img/elche.png",
+    "Real Betis": "img/betis.png",
+    "Málaga": "img/malaga.png",  # <-- Ruta del escudo del Málaga
+    "Real Sociedad": "img/realsociedad.png",
+    "Racing": "img/racing.png",
+    "Celta": "img/celta.png",
+    "Levante": "img/levante.png",
+    "Valencia": "img/valencia.png",
+    "Alavés": "img/alaves.png",
+    "Getafe": "img/getafe.png",
+    "Rayo Vallecano": "img/rayo.png",
+    "Sevilla": "img/sevilla.png",
+    "Osasuna": "img/osasuna.png",
+    "Espanyol": "img/espanyol.png",
+    "Deportivo": "img/deportivo.png",
 }
 
 # --- CÓMPUTO DIRECTO DE PUNTOS ---
@@ -90,16 +91,16 @@ for jugador, equipos in porra_equipos.items():
 
     equipos_con_escudo = []
     for eq in equipos:
-        url = escudos_urls.get(eq, "")
-        if url:
-            html_img = f'<img src="{url}" width="22" style="vertical-align: middle; margin-right: 5px;"> {eq}'
+        ruta_img = escudos_archivos.get(eq, "")
+        if ruta_img and os.path.exists(ruta_img):
+            html_img = f'<img src="{ruta_img}" width="22" style="vertical-align: middle; margin-right: 5px;"> {eq}'
         else:
             html_img = f"⚽ {eq}"
         equipos_con_escudo.append(html_img)
 
     filas_clasificacion.append({
-        "Jugador_Limpio": jugador, # Oculta
-        "Puntos_Numericos": puntos_totales, # Oculta
+        "Jugador_Limpio": jugador,
+        "Puntos_Numericos": puntos_totales,
         "Jugador": f"<b>{jugador}</b>",
         "Equipos": "<br>".join(equipos_con_escudo),
         "Goleador": "<br>".join([f"{gol} <b>({pts})</b>" for gol, pts in goleadores_dict.items()]),
@@ -175,7 +176,6 @@ with col2:
         text_auto=True
     )
     
-    # SOLUCIÓN EJE Y NEGATIVO: Forzar inicio en 0 y dar un margen superior
     max_pts = df_grafica["Puntos_Numericos"].max()
     rango_maximo = max_pts + 5 if max_pts > 0 else 10
     
@@ -193,11 +193,9 @@ st.subheader("⏳ Evolución Temporal de la Competición")
 fig_lineas = px.line(
     df_historial, x="Jornada", y="Puntos Totales", color="Jugador", markers=True,
 )
-
-# SOLUCIÓN EJE Y NEGATIVO (Gráfica de líneas)
 fig_lineas.update_layout(
     xaxis_title="Jornada de Liga", 
     yaxis_title="Puntos Totales Acumulados",
-    yaxis=dict(rangemode="tozero") # Evita que baje de 0
+    yaxis=dict(rangemode="tozero")
 )
 st.plotly_chart(fig_lineas, use_container_width=True)
