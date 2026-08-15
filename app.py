@@ -543,6 +543,14 @@ porra_goleadores = {
         "Goles": 0
     },
 
+    "Iñaki Williams": {
+        "Jugador": "Juan",
+        "Equipo": "Athletic Club",
+        "Goles": 0
+    },
+
+    
+
     "Julián Álvarez": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
