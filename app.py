@@ -455,7 +455,7 @@ html_pesca_template = """
         let maxLifeTime = 25000 + Math.random() * 15000;
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
-        let randomVx = getRandomSpeed(2.5, 4.05);
+        let randomVx = getRandomSpeed(2.5, 4);
         let randomDepthSpeed = getRandomSpeed(0.04, 0.11);
 
         objects.push({
