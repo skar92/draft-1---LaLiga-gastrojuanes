@@ -447,26 +447,41 @@ asig_equipos = {
 
 
 # ==============================================================================
-# ESTADÍSTICAS DE LOS EQUIPOS
+# ESTADÍSTICAS DE LOS EQUIPOS, ganados, empatados, perdidos
 # ==============================================================================
 
 stats_equipos = {
 
     "Athletic Club": {"G": 0, "E": 0, "P": 0},
+    
     "Elche": {"G": 0, "E": 0, "P": 0},
+    
     "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
+    
     "Malaga": {"G": 0, "E": 0, "P": 0},
+
     "Real Sociedad": {"G": 0, "E": 0, "P": 0},
+    
     "Racing": {"G": 0, "E": 0, "P": 0},
+    
     "Celta": {"G": 0, "E": 0, "P": 0},
+
     "Levante": {"G": 0, "E": 0, "P": 0},
+    
     "Valencia": {"G": 0, "E": 0, "P": 0},
+    
     "Alavés": {"G": 1, "E": 0, "P": 0},
+    
     "Getafe": {"G": 0, "E": 0, "P": 1},
+    
     "Rayo Vallecano": {"G": 0, "E": 0, "P": 0},
+    
     "Sevilla": {"G": 0, "E": 0, "P": 0},
+    
     "Osasuna": {"G": 0, "E": 0, "P": 0},
+    
     "Espanyol": {"G": 0, "E": 0, "P": 0},
+    
     "Deportivo": {"G": 0, "E": 0, "P": 0},
 }
 
