@@ -1,26 +1,42 @@
 import base64
-from datetime import datetime
 import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-import streamlit.components.v1 as components
-import json
 
-# Configuración de la interfaz de Streamlit
-st.set_page_config(page_title="Draft LaLiga 2026/27", layout="wide")
+# ==============================================================================
+# CONFIGURACIÓN
+# ==============================================================================
+
+st.set_page_config(
+    page_title="Draft LaLiga 2026/27",
+    layout="wide"
+)
+
 st.title("🏆 Seguimiento y Clasificación del Draft de LaLiga")
 
-# --- FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64 ---
+
+# ==============================================================================
+# FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64
+# ==============================================================================
+
 def obtener_imagen_base64(ruta):
     if os.path.exists(ruta):
         with open(ruta, "rb") as f:
             data = f.read()
+
         encoded = base64.b64encode(data).decode()
         return f"data:image/png;base64,{encoded}"
+
     return ""
 
-# --- RUTAS DE LOS ESCUDOS Y JUGADOR EN LA CARPETA /img ---
+
+# ==============================================================================
+# ESCUDOS DE LOS EQUIPOS
+# Los nombres de las claves deben coincidir exactamente con "Equipo"
+# dentro de porra_goleadores.
+# ==============================================================================
+
 escudos_archivos = {
     "Athletic Club": "img/athletic.png",
     "Elche": "img/elche.png",
@@ -40,8 +56,9 @@ escudos_archivos = {
     "Deportivo": "img/deportivo.png",
 }
 
+
 # ==============================================================================
-# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA
+# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS
 # ==============================================================================
 
 asig_equipos = {
@@ -54,6 +71,7 @@ asig_equipos = {
     "Joaquín": ["Sevilla", "Osasuna"],
     "Telenti": ["Espanyol", "Deportivo"],
 }
+
 
 stats_equipos = {
     "Athletic Club": {"G": 0, "E": 0, "P": 0},
@@ -74,145 +92,451 @@ stats_equipos = {
     "Deportivo": {"G": 0, "E": 0, "P": 0},
 }
 
+
+# ==============================================================================
+# 🎯 GOLEADORES
+#
+# "Equipo" debe coincidir exactamente con una clave de escudos_archivos.
+# Así no necesitas ningún diccionario adicional.
+# ==============================================================================
+
 porra_goleadores = {
-    "Borja Iglesias": {"Jugador": "Ejkar", "Goles": 0},
-    "Cucho Hernández": {"Jugador": "Ejkar", "Goles": 0},
+    "Borja Iglesias": {
+        "Jugador": "Ejkar",
+        "Equipo": "Celta",
+        "Goles": 0
+    },
+    "Cucho Hernández": {
+        "Jugador": "Ejkar",
+        "Equipo": "Real Betis Balompie",
+        "Goles": 0
+    },
 
-    "Lookman": {"Jugador": "Sierra", "Goles": 0},
-    "Isi Palazón": {"Jugador": "Sierra", "Goles": 0},
+    "Lookman": {
+        "Jugador": "Sierra",
+        "Equipo": "Athletic Club",
+        "Goles": 0
+    },
+    "Isi Palazón": {
+        "Jugador": "Sierra",
+        "Equipo": "Rayo Vallecano",
+        "Goles": 0
+    },
 
-    
-    "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
-    "Toni Martinez": {"Jugador": "Vecina", "Goles": 0},
-    
-    "Budimir": {"Jugador": "Mírete", "Goles": 0},
-    "Ayoze": {"Jugador": "Mírete", "Goles": 0},
-    
-    "Mikautadze": {"Jugador": "Miguel Ángel", "Goles": 0},
-    "Sancet": {"Jugador": "Miguel Ángel", "Goles": 0},
-    
-    "Mikel Oyarzabal": {"Jugador": "Juan", "Goles": 0},
-    
-    "Julián Álvarez": {"Jugador": "Joaquín", "Goles": 0},
-    "Sørloth": {"Jugador": "Joaquín", "Goles": 0},
-    
-    "Enes Unal": {"Jugador": "Telenti", "Goles": 0},
-    "Hugo Duro": {"Jugador": "Telenti", "Goles": 0},
+    "Aubameyang": {
+        "Jugador": "Vecina",
+        "Equipo": "Real Sociedad",
+        "Goles": 0
+    },
+    "Toni Martinez": {
+        "Jugador": "Vecina",
+        "Equipo": "Racing",
+        "Goles": 0
+    },
+
+    "Budimir": {
+        "Jugador": "Mírete",
+        "Equipo": "Osasuna",
+        "Goles": 0
+    },
+    "Ayoze": {
+        "Jugador": "Mírete",
+        "Equipo": "Levante",
+        "Goles": 0
+    },
+
+    "Mikautadze": {
+        "Jugador": "Miguel Ángel",
+        "Equipo": "Valencia",
+        "Goles": 0
+    },
+    "Sancet": {
+        "Jugador": "Miguel Ángel",
+        "Equipo": "Athletic Club",
+        "Goles": 0
+    },
+
+    "Mikel Oyarzabal": {
+        "Jugador": "Juan",
+        "Equipo": "Real Sociedad",
+        "Goles": 0
+    },
+
+    "Julián Álvarez": {
+        "Jugador": "Joaquín",
+        "Equipo": "Sevilla",
+        "Goles": 0
+    },
+    "Sørloth": {
+        "Jugador": "Joaquín",
+        "Equipo": "Sevilla",
+        "Goles": 0
+    },
+
+    "Enes Unal": {
+        "Jugador": "Telenti",
+        "Equipo": "Getafe",
+        "Goles": 0
+    },
+    "Hugo Duro": {
+        "Jugador": "Telenti",
+        "Equipo": "Valencia",
+        "Goles": 0
+    },
 }
+
+
+# ==============================================================================
+# PUNTOS DE APUESTAS
+# ==============================================================================
 
 puntos_apuesta = {
-    "Sierra": 0, "Joaquín": 0, "Ejkar": 0, "Vecina": 0,
-    "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
+    "Sierra": 0,
+    "Joaquín": 0,
+    "Ejkar": 0,
+    "Vecina": 0,
+    "Telenti": 0,
+    "Miguel Ángel": 0,
+    "Mírete": 0,
+    "Juan": 0,
 }
 
+
+# ==============================================================================
+# RELACIÓN EQUIPO -> PARTICIPANTE
 # ==============================================================================
 
 equipo_a_jugador = {}
+
 for jugador, lista_eqs in asig_equipos.items():
     for eq in lista_eqs:
         equipo_a_jugador[eq] = jugador
 
-# --- CONSTRUCCIÓN DE LA TABLA DE EQUIPOS ---
+
+# ==============================================================================
+# CONSTRUCCIÓN DE LA TABLA DE EQUIPOS
+# ==============================================================================
+
 filas_equipos = []
+
 for eq, st_eq in stats_equipos.items():
-    g, e, p = st_eq["G"], st_eq["E"], st_eq["P"]
+
+    g = st_eq["G"]
+    e = st_eq["E"]
+    p = st_eq["P"]
+
     jugados = g + e + p
-    puntos = (g * 3) + (e * 1)
-    
+    puntos = (g * 3) + e
+
     ruta_img = escudos_archivos.get(eq, "")
     base64_img = obtener_imagen_base64(ruta_img)
+
     if base64_img:
-        escudo_html = f'<img src="{base64_img}" width="24" style="vertical-align: middle; margin-right: 8px;"> {eq}'
+        escudo_html = (
+            f'<img src="{base64_img}" width="24" '
+            f'style="vertical-align: middle; margin-right: 8px;">'
+            f'{eq}'
+        )
     else:
         escudo_html = f"⚽ {eq}"
-        
+
     filas_equipos.append({
         "Equipo_Nombre": eq,
         "Equipo": escudo_html,
         "Jugador": equipo_a_jugador.get(eq, "-"),
-        "PJ": jugados, "G": g, "E": e, "P": p, "Puntos": puntos,
+        "PJ": jugados,
+        "G": g,
+        "E": e,
+        "P": p,
+        "Puntos": puntos,
     })
 
-df_equipos = pd.DataFrame(filas_equipos).sort_values(by="Puntos", ascending=False).reset_index(drop=True)
 
-# --- CONSTRUCCIÓN DE LA TABLA DE GOLEADORES ---
+df_equipos = (
+    pd.DataFrame(filas_equipos)
+    .sort_values(by="Puntos", ascending=False)
+    .reset_index(drop=True)
+)
+
+
+# ==============================================================================
+# CONSTRUCCIÓN DE LA TABLA DE GOLEADORES
+# Aquí se añade automáticamente el escudo del equipo junto al nombre.
+# ==============================================================================
+
 filas_goleadores = []
-for gol, info in porra_goleadores.items():
+
+for goleador, info in porra_goleadores.items():
+
+    equipo = info["Equipo"]
+
+    # Buscamos el PNG directamente en escudos_archivos
+    ruta_img = escudos_archivos.get(equipo, "")
+    base64_img = obtener_imagen_base64(ruta_img)
+
+    if base64_img:
+        goleador_html = (
+            f'<img src="{base64_img}" width="28" '
+            f'style="vertical-align: middle; margin-right: 8px;">'
+            f'{goleador}'
+        )
+    else:
+        # Si no encuentra el escudo, muestra el nombre igualmente
+        goleador_html = f"⚽ {goleador}"
+
     filas_goleadores.append({
-        "Goleador": gol,
+        "Goleador": goleador_html,
         "Jugador": info["Jugador"],
-        "Goles": info["Goles"]
+        "Goles": info["Goles"],
     })
+
 
 df_goleadores = pd.DataFrame(filas_goleadores)
-if not df_goleadores.empty:
-    df_goleadores = df_goleadores.sort_values(by="Goles", ascending=False).reset_index(drop=True)
 
-# --- CLASIFICACIÓN GENERAL ---
+if not df_goleadores.empty:
+    df_goleadores = (
+        df_goleadores
+        .sort_values(by="Goles", ascending=False)
+        .reset_index(drop=True)
+    )
+
+
+# ==============================================================================
+# CLASIFICACIÓN GENERAL
+# ==============================================================================
+
 filas_general = []
+
 for jug in asig_equipos.keys():
+
     eqs_jugador = asig_equipos[jug]
-    pts_eqs = sum([df_equipos.loc[df_equipos["Equipo_Nombre"] == eq, "Puntos"].values[0] for eq in eqs_jugador if eq in df_equipos["Equipo_Nombre"].values])
-    goles_jugador = sum([info["Goles"] for info in porra_goleadores.values() if info["Jugador"] == jug])
+
+    pts_eqs = sum(
+        df_equipos.loc[
+            df_equipos["Equipo_Nombre"] == eq,
+            "Puntos"
+        ].values[0]
+        for eq in eqs_jugador
+        if eq in df_equipos["Equipo_Nombre"].values
+    )
+
+    goles_jugador = sum(
+        info["Goles"]
+        for info in porra_goleadores.values()
+        if info["Jugador"] == jug
+    )
+
     extra = puntos_apuesta.get(jug, 0)
+
     total = pts_eqs + goles_jugador + extra
-    
+
     filas_general.append({
         "Jugador": f"<b>{jug}</b>",
         "Puntos de Equipos": pts_eqs,
         "Goles": goles_jugador,
         "Puntos de Apuestas": extra,
-        "Total": f"<span style='font-size: 1.2em; font-weight: bold;'>{total}</span>",
-        "Total_Num": total
+        "Total": (
+            f"<span style='font-size: 1.2em; "
+            f"font-weight: bold;'>{total}</span>"
+        ),
+        "Total_Num": total,
     })
 
-df_general = pd.DataFrame(filas_general).sort_values(by="Total_Num", ascending=False).reset_index(drop=True)
 
-# --- ESTILOS CSS ---
-st.markdown("""
-<style>
-    .dataframe-container { overflow-x: auto; margin-bottom: 20px; }
-    .styled-table {
-        border-collapse: collapse; width: 100%; font-size: 0.95em; font-family: sans-serif; text-align: left;
-    }
-    .styled-table thead tr { background-color: #2b2b2b; color: #ffffff; text-align: left; }
-    .styled-table th, .styled-table td { padding: 10px 14px; border-bottom: 1px solid #444444; }
-    .styled-table tbody tr:nth-of-type(even) { background-color: rgba(255, 255, 255, 0.03); }
-</style>
-""", unsafe_allow_html=True)
+df_general = (
+    pd.DataFrame(filas_general)
+    .sort_values(by="Total_Num", ascending=False)
+    .reset_index(drop=True)
+)
 
-# --- RENDERIZADO EN LA WEB ---
+
+# ==============================================================================
+# ESTILOS CSS
+# ==============================================================================
+
+st.markdown(
+    """
+    <style>
+
+        .dataframe-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .styled-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.95em;
+            font-family: sans-serif;
+            text-align: left;
+        }
+
+        .styled-table thead tr {
+            background-color: #2b2b2b;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #444444;
+            vertical-align: middle;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ==============================================================================
+# RENDERIZADO
+# ==============================================================================
+
 col1, col2 = st.columns(2)
 
+
+# ------------------------------------------------------------------------------
+# TABLA DE EQUIPOS
+# ------------------------------------------------------------------------------
+
 with col1:
+
     st.subheader("⚽ Clasificación de Equipos")
-    df_mostrar_eq = df_equipos[["Equipo", "Jugador", "PJ", "G", "E", "P", "Puntos"]]
-    st.markdown(f'<div class="dataframe-container">{df_mostrar_eq.to_html(escape=False, index=False, classes="styled-table")}</div>', unsafe_allow_html=True)
+
+    df_mostrar_eq = df_equipos[
+        [
+            "Equipo",
+            "Jugador",
+            "PJ",
+            "G",
+            "E",
+            "P",
+            "Puntos"
+        ]
+    ]
+
+    st.markdown(
+        f"""
+        <div class="dataframe-container">
+            {df_mostrar_eq.to_html(
+                escape=False,
+                index=False,
+                classes="styled-table"
+            )}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ------------------------------------------------------------------------------
+# TABLA DE GOLEADORES
+# ------------------------------------------------------------------------------
 
 with col2:
+
     st.subheader("🎯 Tabla de Goleadores")
+
     if not df_goleadores.empty:
-        df_mostrar_gol = df_goleadores[["Goleador", "Jugador", "Goles"]]
-        st.markdown(f'<div class="dataframe-container">{df_mostrar_gol.to_html(escape=False, index=False, classes="styled-table")}</div>', unsafe_allow_html=True)
+
+        df_mostrar_gol = df_goleadores[
+            [
+                "Goleador",
+                "Jugador",
+                "Goles"
+            ]
+        ]
+
+        st.markdown(
+            f"""
+            <div class="dataframe-container">
+                {df_mostrar_gol.to_html(
+                    escape=False,
+                    index=False,
+                    classes="styled-table"
+                )}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
     else:
+
         st.info("No hay goleadores registrados todavía.")
+
+
+# ==============================================================================
+# CLASIFICACIÓN GENERAL
+# ==============================================================================
 
 st.markdown("---")
 
 st.subheader("🏆 Clasificación General (Participantes)")
-df_mostrar_gen = df_general[["Jugador", "Puntos de Equipos", "Goles", "Puntos de Apuestas", "Total"]]
-st.markdown(f'<div class="dataframe-container">{df_mostrar_gen.to_html(escape=False, index=False, classes="styled-table")}</div>', unsafe_allow_html=True)
+
+df_mostrar_gen = df_general[
+    [
+        "Jugador",
+        "Puntos de Equipos",
+        "Goles",
+        "Puntos de Apuestas",
+        "Total"
+    ]
+]
+
+st.markdown(
+    f"""
+    <div class="dataframe-container">
+        {df_mostrar_gen.to_html(
+            escape=False,
+            index=False,
+            classes="styled-table"
+        )}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ==============================================================================
+# GRÁFICA DE PUNTOS TOTALES
+# ==============================================================================
 
 st.markdown("---")
 
 st.subheader("📊 Gráfica de Puntos Totales")
-fig_barras = px.bar(df_general, x="Jugador", y="Total_Num", color="Jugador", text_auto=True)
+
+fig_barras = px.bar(
+    df_general,
+    x="Jugador",
+    y="Total_Num",
+    color="Jugador",
+    text_auto=True
+)
+
 max_pts = df_general["Total_Num"].max()
-fig_barras.update_layout(showlegend=False, xaxis_title="Participante", yaxis_title="Puntos Totales", yaxis=dict(range=[0, max_pts + 5 if max_pts > 0 else 10]))
-st.plotly_chart(fig_barras, use_container_width=True)
 
+fig_barras.update_layout(
+    showlegend=False,
+    xaxis_title="Participante",
+    yaxis_title="Puntos Totales",
+    yaxis=dict(
+        range=[
+            0,
+            max_pts + 5 if max_pts > 0 else 10
+        ]
+    )
+)
 
-
+st.plotly_chart(
+    fig_barras,
+    use_container_width=True
+)
 
 
 import os
