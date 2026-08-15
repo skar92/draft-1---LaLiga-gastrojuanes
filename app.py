@@ -59,53 +59,49 @@ puntos_apuesta = {
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
 }
 
-# --- URLS DE LOS ESCUDOS REALES (Formato PNG desde Wikimedia) ---
+# --- URLS DIRECTAS A LOS ARCHIVOS SVG EN WIKIMEDIA ---
 escudos_urls = {
-    "Athletic Club": "https://upload.wikimedia.org/wikipedia/en/thumb/9/98/Club_Athletic_Bilbao_logo.svg/50px-Club_Athletic_Bilbao_logo.svg.png",
-    "Elche": "https://upload.wikimedia.org/wikipedia/en/thumb/3/36/Elche_cf_logo.svg/50px-Elche_cf_logo.svg.png",
-    "Real Betis": "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/Real_betis_logo.svg/50px-Real_betis_logo.svg.png",
-    "Real Sociedad": "https://upload.wikimedia.org/wikipedia/en/thumb/f/f1/Real_Sociedad_logo.svg/50px-Real_Sociedad_logo.svg.png",
-    "Racing": "https://upload.wikimedia.org/wikipedia/en/thumb/1/1c/Racing_de_Santander_logo.svg/50px-Racing_de_Santander_logo.svg.png",
-    "Celta": "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/RC_Celta_de_Vigo_logo.svg/50px-RC_Celta_de_Vigo_logo.svg.png",
-    "Levante": "https://upload.wikimedia.org/wikipedia/en/thumb/7/7b/Levante_UD_logo.svg/50px-Levante_UD_logo.svg.png",
-    "Valencia": "https://upload.wikimedia.org/wikipedia/en/thumb/c/ce/Valenciacf.svg/50px-Valenciacf.svg.png",
-    "Alavés": "https://upload.wikimedia.org/wikipedia/en/thumb/2/2e/Deportivo_Alaves_logo.svg/50px-Deportivo_Alaves_logo.svg.png",
-    "Getafe": "https://upload.wikimedia.org/wikipedia/en/thumb/7/7f/Getafe_logo.svg/50px-Getafe_logo.svg.png",
-    "Rayo Vallecano": "https://upload.wikimedia.org/wikipedia/en/thumb/1/17/Rayo_Vallecano_logo.svg/50px-Rayo_Vallecano_logo.svg.png",
-    "Sevilla": "https://upload.wikimedia.org/wikipedia/en/thumb/3/3b/Sevilla_FC_logo.svg/50px-Sevilla_FC_logo.svg.png",
-    "Osasuna": "https://upload.wikimedia.org/wikipedia/en/thumb/d/db/Osasuna_logo.svg/50px-Osasuna_logo.svg.png",
-    "Espanyol": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d6/Rcd_espanyol_logo.svg/50px-Rcd_espanyol_logo.svg.png",
-    "Deportivo": "https://upload.wikimedia.org/wikipedia/en/thumb/4/4e/RC_Deportivo_La_Coru%C3%B1a_logo.svg/50px-RC_Deportivo_La_Coru%C3%B1a_logo.svg.png",
+    "Athletic Club": "https://upload.wikimedia.org/wikipedia/en/9/98/Club_Athletic_Bilbao_logo.svg",
+    "Elche": "https://upload.wikimedia.org/wikipedia/en/3/36/Elche_cf_logo.svg",
+    "Real Betis": "https://upload.wikimedia.org/wikipedia/en/1/13/Real_betis_logo.svg",
+    "Real Sociedad": "https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg",
+    "Racing": "https://upload.wikimedia.org/wikipedia/en/1/1c/Racing_de_Santander_logo.svg",
+    "Celta": "https://upload.wikimedia.org/wikipedia/en/1/12/RC_Celta_de_Vigo_logo.svg",
+    "Levante": "https://upload.wikimedia.org/wikipedia/en/7/7b/Levante_UD_logo.svg",
+    "Valencia": "https://upload.wikimedia.org/wikipedia/en/c/ce/Valenciacf.svg",
+    "Alavés": "https://upload.wikimedia.org/wikipedia/en/2/2e/Deportivo_Alaves_logo.svg",
+    "Getafe": "https://upload.wikimedia.org/wikipedia/en/7/7f/Getafe_logo.svg",
+    "Rayo Vallecano": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Escudo_del_Rayo_Vallecano.svg",
+    "Sevilla": "https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_FC_logo.svg",
+    "Osasuna": "https://upload.wikimedia.org/wikipedia/en/d/db/Osasuna_logo.svg",
+    "Espanyol": "https://upload.wikimedia.org/wikipedia/en/d/d6/Rcd_espanyol_logo.svg",
+    "Deportivo": "https://upload.wikimedia.org/wikipedia/en/4/4e/RC_Deportivo_La_Coru%C3%B1a_logo.svg",
 }
 
 # --- CÓMPUTO DIRECTO DE PUNTOS ---
 filas_clasificacion = []
 
 for jugador, equipos in porra_equipos.items():
-    # Puntos sumados por los equipos elegidos
     pts_equipos = sum([puntos_equipos_valores.get(eq, 0) for eq in equipos])
-
-    # Goles sumados por los futbolistas
     goleadores_dict = porra_goleadores.get(jugador, {})
     pts_goleadores = sum(goleadores_dict.values())
-
-    # Puntos extra
     pts_extra = puntos_apuesta.get(jugador, 0)
     puntos_totales = pts_equipos + pts_goleadores + pts_extra
 
-    # Generar texto HTML con la imagen al lado del nombre
     equipos_con_escudo = []
     for eq in equipos:
         url = escudos_urls.get(eq, "")
         if url:
-            html_img = f'<img src="{url}" width="22" style="vertical-align: middle; margin-right: 5px; border-radius: 2px;"> {eq}'
+            html_img = f'<img src="{url}" width="22" style="vertical-align: middle; margin-right: 5px;"> {eq}'
         else:
             html_img = f"⚽ {eq}"
         equipos_con_escudo.append(html_img)
 
     filas_clasificacion.append({
+        "Jugador_Limpio": jugador, # Oculta: Para que la gráfica lea el nombre sin HTML
+        "Puntos_Numericos": puntos_totales, # Oculta: Para que la gráfica lea números limpios
         "Jugador": f"<b>{jugador}</b>",
-        "Equipos": "<br>".join(equipos_con_escudo), # Usamos <br> para separar equipos en líneas
+        "Equipos": "<br>".join(equipos_con_escudo),
         "Goleador": "<br>".join([f"{gol} <b>({pts})</b>" for gol, pts in goleadores_dict.items()]),
         "Pts Equipos": pts_equipos,
         "Goles": pts_goleadores,
@@ -128,7 +124,7 @@ datos_historicos = [
 ]
 df_historial = pd.DataFrame(datos_historicos)
 
-# --- ESTILOS CSS PERSONALIZADOS PARA LA TABLA HTML ---
+# --- ESTILOS CSS PERSONALIZADOS ---
 st.markdown("""
 <style>
     .dataframe-container {
@@ -161,23 +157,24 @@ col1, col2 = st.columns([1.3, 0.7])
 
 with col1:
     st.subheader("📊 Clasificación General")
-    df_mostrar = df_liga.sort_values(by="Puntos Totales", ascending=False)[
+    # Filtramos para mostrar en la tabla web solo las columnas con estilo HTML
+    df_mostrar = df_liga.sort_values(by="Puntos_Numericos", ascending=False)[
         ["Jugador", "Equipos", "Goleador", "Pts Equipos", "Goles", "Pts Apuesta", "Puntos Totales"]
     ]
-    # Renderizamos como HTML para mostrar las imágenes reales
     tabla_html = df_mostrar.to_html(escape=False, index=False, classes="styled-table")
     st.markdown(f'<div class="dataframe-container">{tabla_html}</div>', unsafe_allow_html=True)
 
 with col2:
     st.subheader("🎯 Comparativa de Puntos")
-    # Para la gráfica usamos el df original numérico, no el HTML
-    df_grafica = pd.DataFrame(filas_clasificacion)
-    # Limpiamos HTML del nombre del jugador y de los puntos totales para que la gráfica los lea bien
-    df_grafica['Jugador_Limpio'] = df_grafica['Jugador'].str.replace('<b>', '').str.replace('</b>', '')
-    df_grafica['Puntos_Numericos'] = df_grafica['Puntos Totales'].str.extract('(\d+)').astype(int)
+    # Usamos el dataframe original (df_liga) para alimentar la gráfica con los números reales
+    df_grafica = df_liga.sort_values(by="Puntos_Numericos", ascending=False)
     
     fig_barras = px.bar(
-        df_grafica, x="Jugador_Limpio", y="Puntos_Numericos", color="Jugador_Limpio", text_auto=True
+        df_grafica, 
+        x="Jugador_Limpio", 
+        y="Puntos_Numericos", 
+        color="Jugador_Limpio", 
+        text_auto=True
     )
     fig_barras.update_layout(showlegend=False, xaxis_title="Jugador", yaxis_title="Puntos Totales")
     st.plotly_chart(fig_barras, use_container_width=True)
@@ -190,4 +187,3 @@ fig_lineas = px.line(
 )
 fig_lineas.update_layout(xaxis_title="Jornada de Liga", yaxis_title="Puntos Totales Acumulados")
 st.plotly_chart(fig_lineas, use_container_width=True)
-
