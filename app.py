@@ -398,7 +398,7 @@ html_pesca_template = """
         return Math.random() < 0.5 ? val : -val;
     }
 
-    let angleSpeed = getRandomSpeed(0.04, 0.09);
+    let angleSpeed = getRandomSpeed(0.04, 0.06);
     let fixedAngle = 0; let chargeForce = 0;
     
     let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
@@ -455,8 +455,8 @@ html_pesca_template = """
         let maxLifeTime = 25000 + Math.random() * 15000;
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
-        let randomVx = getRandomSpeed(2.5, 7.5);
-        let randomDepthSpeed = getRandomSpeed(0.04, 0.09);
+        let randomVx = getRandomSpeed(2.5, 4,5);
+        let randomDepthSpeed = getRandomSpeed(0.04, 2.5);
 
         objects.push({
             id: Math.random().toString(36),
@@ -602,7 +602,7 @@ html_pesca_template = """
                 } else {
                     let minLimit = Math.PI * 1.5; let maxLimit = Math.PI * 2;
                     if (angleParam > maxLimit) { angleParam = maxLimit; angleSpeed = -getRandomSpeed(0.04, 0.10); }
-                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed = getRandomSpeed(0.04, 0.10); }
+                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed = getRandomSpeed(0.04, 0.06); }
                 }
             } else {
                 if (angleParam > Math.PI) { angleParam = Math.PI; angleSpeed = -getRandomSpeed(0.04, 0.10); }
