@@ -76,16 +76,26 @@ stats_equipos = {
 
 porra_goleadores = {
     "Borja Iglesias": {"Jugador": "Ejkar", "Goles": 0},
+    "Cucho Hernández": {"Jugador": "Ejkar", "Goles": 0},
+
     "Lookman": {"Jugador": "Sierra", "Goles": 0},
+    "Antony": {"Jugador": "Sierra", "Goles": 0},
+
+    
     "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
     "Toni Martinez": {"Jugador": "Vecina", "Goles": 0},
+    
     "Budimir": {"Jugador": "Mírete", "Goles": 0},
     "Ayoze": {"Jugador": "Mírete", "Goles": 0},
+    
     "Mikautadze": {"Jugador": "Miguel Ángel", "Goles": 0},
     "Sancet": {"Jugador": "Miguel Ángel", "Goles": 0},
+    
     "Mikel Oyarzabal": {"Jugador": "Juan", "Goles": 0},
+    
     "Julián Álvarez": {"Jugador": "Joaquín", "Goles": 0},
     "Sørloth": {"Jugador": "Joaquín", "Goles": 0},
+    
     "Enes Unal": {"Jugador": "Telenti", "Goles": 0},
     "Hugo Duro": {"Jugador": "Telenti", "Goles": 0},
 }
