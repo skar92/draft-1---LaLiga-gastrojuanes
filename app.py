@@ -1,23 +1,87 @@
 import base64
-from datetime import datetime
 import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Configuración de la interfaz de Streamlit
+# Configuración de página
 st.set_page_config(page_title="Draft LaLiga 2026/27", layout="wide")
+
+# --- FUNCIÓN DE CARGA ROBUSTA ---
+def obtener_imagen_base64(nombre_archivo):
+    # Calcula la ruta absoluta del archivo basándose en la ubicación de este script
+    ruta_script = os.path.dirname(os.path.abspath(__file__))
+    ruta_completa = os.path.join(ruta_script, "img", nombre_archivo)
+    
+    if os.path.exists(ruta_completa):
+        with open(ruta_completa, "rb") as f:
+            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    return None
+
+# --- CARGA DE IMAGEN ---
+img_base64_pesca = obtener_imagen_base64("jugador.png")
+
 st.title("🏆 Seguimiento y Clasificación del Draft de LaLiga")
 
-# --- FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64 ---
-def obtener_imagen_base64(ruta):
-    if os.path.exists(ruta):
-        with open(ruta, "rb") as f:
-            data = f.read()
-        encoded = base64.b64encode(data).decode()
-        return f"data:image/png;base64,{encoded}"
-    return ""
+# --- LÓGICA DEL MINIJUEGO ---
+st.subheader("🎣 Minijuego: La Pesca de Juan")
+
+if img_base64_pesca is None:
+    st.error("No se encuentra el archivo 'img/jugador.png'. Verifica que la carpeta 'img' esté al mismo nivel que 'app.py'.")
+else:
+    # --- CÓDIGO HTML/JS INTEGRADO ---
+    html_pesca = f"""
+    <div id="game-container" style="position:relative; width:100%; max-width:800px; margin:0 auto; background:#000;">
+        <canvas id="game-canvas" style="display:block; width:100%; height:500px; background:linear-gradient(to bottom, #87CEEB 35%, #1E90FF 35%, #051937 100%);"></canvas>
+    </div>
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const juanImg = new Image();
+        juanImg.src = "{img_base64_pesca}";
+        
+        let width = 800, height = 500;
+        canvas.width = width; canvas.height = height;
+
+        // Variables de oscilación aleatoria
+        let angle = 0;
+        let angleSpeed = 0.05;
+        const A = 0.03; // Velocidad mínima
+        const B = 0.12; // Velocidad máxima
+        
+        function getRand(a, b) {{ return Math.random() * (b - a) + a; }}
+
+        function draw() {{
+            ctx.clearRect(0, 0, width, height);
+            
+            // Dibujar Pescador
+            ctx.drawImage(juanImg, width/2 - 25, 100, 50, 50);
+
+            // Caña oscilante (oscilación aleatoria entre A y B)
+            angle += angleSpeed;
+            if (angle > 1 || angle < -1) {{
+                angleSpeed = getRand(A, B) * (angleSpeed > 0 ? -1 : 1);
+            }}
+
+            let rad = Math.sin(angle * Math.PI) * 1.5;
+            ctx.beginPath();
+            ctx.moveTo(width/2, 150);
+            ctx.lineTo(width/2 + Math.sin(rad) * 100, 250);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            requestAnimationFrame(draw);
+        }}
+        
+        juanImg.onload = draw;
+    </script>
+    """
+    components.html(html_pesca, height=520)
+
+# --- TABLAS DE DATOS (RESTA DEL CÓDIGO) ---
+# ... (Aquí mantienes el resto de tu código de tablas pandas)
 
 # --- RUTAS DE LOS ESCUDOS Y JUGADOR EN LA CARPETA /img ---
 escudos_archivos = {
