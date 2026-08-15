@@ -85,7 +85,7 @@ porra_goleadores = {
     "Enes Ünal": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
 }
 
-# Puntos de apuesta o extras de mesa por participante
+# Puntos de apuesta o extras de mesa por participante (opcional, por si se usa en el futuro)
 puntos_apuesta = {
     "Sierra": 0, "Joaquín": 0, "Ejkar": 0, "Vecina": 0,
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
@@ -108,7 +108,6 @@ for eq, st_eq in stats_equipos.items():
     jugados = g + e + p
     puntos = (g * 3) + (e * 1)
     
-    # Preparar HTML del escudo
     ruta_img = escudos_archivos.get(eq, "")
     base64_img = obtener_imagen_base64(ruta_img)
     if base64_img:
@@ -128,9 +127,7 @@ for eq, st_eq in stats_equipos.items():
     })
 
 df_equipos = pd.DataFrame(filas_equipos)
-# Ordenar por Puntos de forma descendente
 df_equipos = df_equipos.sort_values(by="Puntos", ascending=False).reset_index(drop=True)
-
 
 # --- CONSTRUCCIÓN DE LA TABLA DE GOLEADORES ---
 filas_goleadores = []
@@ -158,17 +155,30 @@ df_goleadores = pd.DataFrame(filas_goleadores)
 if not df_goleadores.empty:
     df_goleadores = df_goleadores.sort_values(by="Goles", ascending=False).reset_index(drop=True)
 
-
-# --- CÁLCULO DE PUNTOS TOTALES POR PARTICIPANTE ---
-puntos_totales_participantes = {}
+# --- CONSTRUCCIÓN DE LA CLASIFICACIÓN GENERAL (TERCERA TABLA) ---
+filas_general = []
 for jug in asig_equipos.keys():
     eqs_jugador = asig_equipos[jug]
+    # Puntos sumados por sus equipos
     pts_eqs = sum([df_equipos.loc[df_equipos["Equipo_Nombre"] == eq, "Puntos"].values[0] for eq in eqs_jugador if eq in df_equipos["Equipo_Nombre"].values])
     
+    # Goles sumados por sus goleadores
     goles_jugador = sum([info["Goles"] for info in porra_goleadores.values() if info["Jugador"] == jug])
+    
+    # Extras / Apuestas
     extra = puntos_apuesta.get(jug, 0)
     
-    puntos_totales_participantes[jug] = pts_eqs + goles_jugador + extra
+    total = pts_eqs + goles_jugador + extra
+    
+    filas_general.append({
+        "Jugador": f"<b>{jug}</b>",
+        "Puntos de Equipos": pts_eqs,
+        "Goles": goles_jugador,
+        "Total": f"<span style='font-size: 1.2em; font-weight: bold;'>{total}</span>",
+        "Total_Num": total # Columna oculta para ordenar correctamente
+    })
+
+df_general = pd.DataFrame(filas_general).sort_values(by="Total_Num", ascending=False).reset_index(drop=True)
 
 # --- ESTILOS CSS PERSONALIZADOS ---
 st.markdown("""
@@ -216,21 +226,25 @@ with col2:
 
 st.markdown("---")
 
-# --- GRÁFICA COMPARATIVA DE PARTICIPANTES ---
-st.subheader("📊 Comparativa General de Puntos por Participante")
-df_participantes = pd.DataFrame([
-    {"Jugador": j, "Puntos Totales": p} for j, p in puntos_totales_participantes.items()
-]).sort_values(by="Puntos Totales", ascending=False)
+# --- TERCERA TABLA: CLASIFICACIÓN GENERAL ---
+st.subheader("🏆 Clasificación General (Participantes)")
+df_mostrar_gen = df_general[["Jugador", "Puntos de Equipos", "Goles", "Total"]]
+tabla_gen_html = df_mostrar_gen.to_html(escape=False, index=False, classes="styled-table")
+st.markdown(f'<div class="dataframe-container">{tabla_gen_html}</div>', unsafe_allow_html=True)
 
+st.markdown("---")
+
+# --- GRÁFICA COMPARATIVA DE PARTICIPANTES ---
+st.subheader("📊 Gráfica de Puntos Totales")
 fig_barras = px.bar(
-    df_participantes, 
+    df_general, 
     x="Jugador", 
-    y="Puntos Totales", 
+    y="Total_Num", 
     color="Jugador", 
     text_auto=True
 )
 
-max_pts = df_participantes["Puntos Totales"].max()
+max_pts = df_general["Total_Num"].max()
 rango_maximo = max_pts + 5 if max_pts > 0 else 10
 
 fig_barras.update_layout(
