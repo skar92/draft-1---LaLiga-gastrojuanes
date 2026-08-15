@@ -19,7 +19,7 @@ def obtener_imagen_base64(ruta):
         return f"data:image/png;base64,{encoded}"
     return ""
 
-# --- RUTAS DE LOS ESCUDOS EN LA CARPETA /img ---
+# --- RUTAS DE LOS ESCUDOS Y JUGADOR EN LA CARPETA /img ---
 escudos_archivos = {
     "Athletic Club": "img/athletic.png",
     "Elche": "img/elche.png",
@@ -207,9 +207,8 @@ st.plotly_chart(fig_barras, use_container_width=True)
 st.markdown("---")
 st.subheader("🎣 Minijuego: La Pesca de Juan")
 
-img_base64_pesca = obtener_imagen_base64("img/athletic.png") # O la ruta de la imagen que uses para Juan (ej: primer escudo o archivo general)
-# Si tienes una imagen específica para Juan en base64, reemplaza esta variable o usa directamente tu `img_base64` anterior.
-img_base64_pesca = locals().get('img_base64', '') 
+# Cargamos explícitamente la imagen del pescador desde img/jugador.png
+img_base64_pesca = obtener_imagen_base64("img/jugador.png")
 
 html_pesca_template = """
 <!DOCTYPE html>
@@ -248,7 +247,7 @@ html_pesca_template = """
 
     <div id="ui">
         <div style="color: #ffeb3b; font-size: 12px; margin-bottom: 4px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;">
-            🎮 <b>Muelle de Juan:</b> Pesca 10 Juanes. Evita tarjetas rojas. Usa las olas para frenar la patera. Ojo al radar del Juanprona.
+            🎮 <b>Muelle de Juan:</b> Pesca 10 Juanes. Velocidad dinámica aleatoria. ¡Cuidado con el radar!
         </div>
         <div>👤 Puntos Juan: <span id="score">0</span> / 10 <span id="acid-indicator" style="color:#2ecc71; font-weight:bold; display:none;">⚠️ LLUVIA ÁCIDA</span></div>
         <div>⏱️ Tiempo: <span id="clock">0.0</span>s</div>
@@ -321,13 +320,20 @@ html_pesca_template = """
 
     let inputState = 'angle'; 
     let angleParam = 0.5; 
-    let angleSpeed = 0.035; 
+    
+    // Función auxiliar para obtener un valor aleatorio entre a y b
+    function getRandomSpeed(a, b) {
+        let val = Math.random() * (b - a) + a;
+        return Math.random() < 0.5 ? val : -val;
+    }
+
+    let angleSpeed = getRandomSpeed(0.04, 0.09); // Velocidad oscilante inicial de la caña entre a=0.04 y b=0.09
     let fixedAngle = 0; let chargeForce = 0;
     
-    let heli = { x: 100, y: 35, vx: 3, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
+    let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
     
     let patera = { 
-        active: false, x: 0, y: 0, startX: 0, baseVx: 0, maxVx: 1.2,
+        active: false, x: 0, y: 0, startX: 0, baseVx: 0, maxVx: 2.0,
         spawnTimer: Date.now() + 15000, direction: 'right',
         hitFlash: 0 
     };
@@ -378,13 +384,17 @@ html_pesca_template = """
         let maxLifeTime = 25000 + Math.random() * 15000;
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
+        // Velocidad de movimiento horizontal y flotación dinámica de los bultos (más ágiles, entre a=2.5 y b=7.5)
+        let randomVx = getRandomSpeed(2.5, 7.5);
+        let randomDepthSpeed = getRandomSpeed(0.04, 0.09);
+
         objects.push({
             id: Math.random().toString(36),
             x: Math.random() * width,
             depthPercent: randomDepthPct,
             y: 0, type: type, isJuanin: assignJuanin,
-            vx: (Math.random() - 0.5) * (type === TYPES.JUAN ? 8.0 : 4.5), ax: 0,
-            depthSpeed: 0.02 + Math.random() * 0.03, depthAmp: 8 + Math.random() * 18, phase: Math.random() * Math.PI * 2,
+            vx: randomVx, ax: 0,
+            depthSpeed: randomDepthSpeed, depthAmp: 12 + Math.random() * 22, phase: Math.random() * Math.PI * 2,
             spawnTime: Date.now(), discovered: isDiscovered,
             lastDirectionChange: Date.now(), changeInterval: 300 + Math.random() * 600,
             deathTime: Date.now() + maxLifeTime
@@ -428,7 +438,7 @@ html_pesca_template = """
             nextAcidEvent = now + 25000 + Math.random() * 15000;
         }
         if (acidRainActive && Math.random() < 0.5) {
-            acidDrops.push({ x: Math.random() * width, y: 0, speed: 7 + Math.random() * 5 });
+            acidDrops.push({ x: Math.random() * width, y: 0, speed: 10 + Math.random() * 6 });
         }
         for (let d = acidDrops.length - 1; d >= 0; d--) {
             acidDrops[d].y += acidDrops[d].speed;
@@ -442,8 +452,8 @@ html_pesca_template = """
 
         if (heli.active) {
             if (now > heli.nextChange) {
-                heli.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 5);
-                heli.nextChange = now + 600 + Math.random() * 1200;
+                heli.vx = getRandomSpeed(3, 8);
+                heli.nextChange = now + 500 + Math.random() * 1000;
             }
             heli.x += heli.vx;
             if (heli.x < 40) { heli.x = 40; heli.vx *= -1; }
@@ -457,30 +467,30 @@ html_pesca_template = """
             nextWaveSpawn = now + 1000; 
             
             if (Math.random() > 0.5) {
-                patera.x = -45; patera.startX = -45; patera.baseVx = 0.55; 
+                patera.x = -45; patera.startX = -45; patera.baseVx = 0.8; 
                 patera.direction = 'left'; 
                 angleParam = Math.PI * 1.2; 
             } else {
-                patera.x = width + 45; patera.startX = width + 45; patera.baseVx = -0.55; 
+                patera.x = width + 45; patera.startX = width + 45; patera.baseVx = -0.8; 
                 patera.direction = 'right'; 
                 angleParam = Math.PI * 1.7; 
             }
-            triggerGiantAlert("⛵ ¡PATERA DETECTADA!\\nVelocidad progresiva suave hacia el centro. ¡Frénala!", "#f1c40f");
+            triggerGiantAlert("⛵ ¡PATERA DETECTADA!\\nVelocidad progresiva hacia el centro. ¡Frénala!", "#f1c40f");
         }
 
         if (patera.active && now >= globalPauseUntil) {
             let center = width / 2;
 
             if (now > nextWaveSpawn) {
-                waves.push({ x: center, y: seaTopBoundary, vx: patera.direction === 'left' ? -1.4 : 1.4, size: 7 });
-                nextWaveSpawn = now + 5800; 
+                waves.push({ x: center, y: seaTopBoundary, vx: patera.direction === 'left' ? -1.8 : 1.8, size: 7 });
+                nextWaveSpawn = now + 4000; 
             }
 
             for (let w = waves.length - 1; w >= 0; w--) {
-                let wave = waves[w]; wave.x += wave.vx; wave.size += 0.04; 
+                let wave = waves[w]; wave.x += wave.vx; wave.size += 0.05; 
                 let distanceToPatera = Math.abs(wave.x - patera.x);
                 if (distanceToPatera < 15) {
-                    let fixedPush = 25; 
+                    let fixedPush = 30; 
                     if (patera.direction === 'left') patera.x = Math.max(patera.startX, patera.x - fixedPush);
                     else patera.x = Math.min(patera.startX, patera.x + fixedPush);
                     patera.hitFlash = now + 250; waves.splice(w, 1); continue;
@@ -517,24 +527,24 @@ html_pesca_template = """
             if (patera.active) {
                 if (patera.direction === 'left') {
                     let minLimit = Math.PI; let maxLimit = Math.PI * 1.5;
-                    if (angleParam > maxLimit) { angleParam = maxLimit; angleSpeed *= -1; }
-                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed *= -1; }
+                    if (angleParam > maxLimit) { angleParam = maxLimit; angleSpeed = -getRandomSpeed(0.04, 0.10); }
+                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed = getRandomSpeed(0.04, 0.10); }
                 } else {
                     let minLimit = Math.PI * 1.5; let maxLimit = Math.PI * 2;
-                    if (angleParam > maxLimit) { angleParam = maxLimit; angleSpeed *= -1; }
-                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed *= -1; }
+                    if (angleParam > maxLimit) { angleParam = maxLimit; angleSpeed = -getRandomSpeed(0.04, 0.10); }
+                    if (angleParam < minLimit) { angleParam = minLimit; angleSpeed = getRandomSpeed(0.04, 0.10); }
                 }
             } else {
-                if (angleParam > Math.PI) { angleParam = Math.PI; angleSpeed *= -1; }
-                if (angleParam < 0) { angleParam = 0; angleSpeed *= -1; }
+                if (angleParam > Math.PI) { angleParam = Math.PI; angleSpeed = -getRandomSpeed(0.04, 0.10); }
+                if (angleParam < 0) { angleParam = 0; angleSpeed = getRandomSpeed(0.04, 0.10); }
             }
         }
         
-        if (inputState === 'force') chargeForce = Math.min(chargeForce + 2.8, 100);
+        if (inputState === 'force') chargeForce = Math.min(chargeForce + 4.5, 100);
 
         if (now > nextSpawnTime) {
             if(objects.length < 20) spawnObject();
-            nextSpawnTime = now + 3500;
+            nextSpawnTime = now + 2500;
         }
 
         let totalJuanesTarget = Math.round(objects.length * 0.30);
@@ -602,7 +612,7 @@ html_pesca_template = """
 
         if (inputState === 'launching') {
             if (hook.mode === 'parabolic') {
-                hook.x += hook.vx; hook.vy += 0.42; hook.y += hook.vy;
+                hook.x += hook.vx; hook.vy += 0.5; hook.y += hook.vy;
                 if (patera.active && Math.abs(hook.x - patera.x) < 28 && Math.abs(hook.y - patera.y) < 22) {
                     processPateraCatch(); return;
                 }
@@ -613,7 +623,6 @@ html_pesca_template = """
             } else {
                 let dx = hook.targetX - hook.x; let dy = hook.targetY - hook.y; let dist = Math.sqrt(dx*dx + dy*dy);
                 
-                // Comprobación de colisión en tiempo real durante el trayecto (atraviesa / intercepta)
                 let targetHit = null; let hitIndex = -1;
                 for(let i=0; i<objects.length; i++) {
                     let o = objects[i]; let activeSize = o.discovered ? (o.isJuanin ? 15 : 28) : 28;
@@ -624,16 +633,20 @@ html_pesca_template = """
 
                 if (targetHit) {
                     processCatch(targetHit, hitIndex);
-                } else if (dist > 18) {
-                    hook.x += (dx / dist) * 18; hook.y += (dy / dist) * 18;
+                } else if (dist > 22) {
+                    hook.x += (dx / dist) * 22; hook.y += (dy / dist) * 22;
                 } else {
                     inputState = 'returning';
                 }
             }
         } else if (inputState === 'returning') {
             let dx = (width/2) - hook.x; let dy = (seaTopBoundary - 15) - hook.y; let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > 25) { hook.x += (dx / dist) * 25; hook.y += (dy / dist) * 25; } 
-            else { inputState = 'angle'; if (angleParam > Math.PI) angleParam = (patera.direction === 'left') ? Math.PI * 1.2 : Math.PI * 1.7; }
+            if (dist > 30) { hook.x += (dx / dist) * 30; hook.y += (dy / dist) * 30; } 
+            else { 
+                inputState = 'angle'; 
+                angleSpeed = getRandomSpeed(0.04, 0.10); // Nueva velocidad aleatoria al volver a empezar
+                if (angleParam > Math.PI) angleParam = (patera.direction === 'left') ? Math.PI * 1.2 : Math.PI * 1.7; 
+            }
         }
     }
 
@@ -673,7 +686,7 @@ html_pesca_template = """
             }
             if (score >= 10) { isGameOver = true; setTimeout(win, 100); }
         } else if (obj.type === TYPES.CARD) {
-            nPenalties++; let extraSeconds = 4 + nPenalties; accumulatedTime += (extraSeconds * 1000); 
+            nPenalties++; let extraSeconds = 3 + nPenalties; accumulatedTime += (extraSeconds * 1000); 
             penaltyTime = Date.now() + (extraSeconds * 1000);
             triggerGiantAlert("🟥 ¡TARJETA ROJA!\\n+" + extraSeconds + "s de penalización", "#ff4444");
         } else { triggerGiantAlert("⚽ ¡PELOTA DE FÚTBOL!\\nLimpieza marina", "#3498db"); }
@@ -700,7 +713,7 @@ html_pesca_template = """
         if (acidRainActive) {
             ctx.strokeStyle = 'rgba(150, 240, 50, 0.4)'; ctx.lineWidth = 1.5;
             acidDrops.forEach(d => {
-                ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 1, d.y + 9); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 1, d.y + 11); ctx.stroke();
             });
         }
 
@@ -794,7 +807,7 @@ html_pesca_template = """
             
             if (fixedAngle >= Math.PI && patera.active) {
                 hook.mode = 'parabolic';
-                let initialVelocity = 4 + (chargeForce / 100) * 14; 
+                let initialVelocity = 5 + (chargeForce / 100) * 16; 
                 hook.vx = Math.cos(fixedAngle) * initialVelocity; hook.vy = Math.sin(fixedAngle) * initialVelocity; 
             } else {
                 hook.mode = 'straight';
