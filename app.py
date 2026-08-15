@@ -39,7 +39,7 @@ escudos_archivos = {
 }
 
 # ==============================================================================
-# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA (DRAFT ACTUALIZADO)
+# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA
 # ==============================================================================
 
 # Relación de qué jugador tiene qué equipos según el draft
@@ -141,7 +141,6 @@ for gol, info in porra_goleadores.items():
         
     filas_goleadores.append({
         "Goleador": gol,
-        "Equipo": eq,
         "Jugador": info["Jugador"],
         "PJ": pj_equipo,
         "Goles": info["Goles"]
@@ -210,7 +209,7 @@ with col1:
 with col2:
     st.subheader("🎯 Tabla de Goleadores")
     if not df_goleadores.empty:
-        df_mostrar_gol = df_goleadores[["Goleador", "Equipo", "Jugador", "PJ", "Goles"]]
+        df_mostrar_gol = df_goleadores[["Goleador", "Jugador", "PJ", "Goles"]]
         tabla_gol_html = df_mostrar_gol.to_html(escape=False, index=False, classes="styled-table")
         st.markdown(f'<div class="dataframe-container">{tabla_gol_html}</div>', unsafe_allow_html=True)
     else:
