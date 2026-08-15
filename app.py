@@ -75,16 +75,17 @@ stats_equipos = {
 }
 
 porra_goleadores = {
-    "Borja Iglesias": {"Equipo": "Athletic Club", "Jugador": "Ejkar", "Goles": 0},
-    "Lookman": {"Equipo": "Real Betis Balompie", "Jugador": "Sierra", "Goles": 0},
-    "Aubameyang": {"Equipo": "Real Sociedad", "Jugador": "Vecina", "Goles": 0},
-    "Budimir": {"Equipo": "Celta", "Jugador": "Mírete", "Goles": 0},
-    "Mikautadze": {"Equipo": "Valencia", "Jugador": "Miguel Ángel", "Goles": 0},
-    "Mikel Oyarzabal": {"Equipo": "Getafe", "Jugador": "Juan", "Goles": 0},
-    "Julián Álvarez": {"Equipo": "Sevilla", "Jugador": "Joaquín", "Goles": 0},
-    "Sørloth": {"Equipo": "Sevilla", "Jugador": "Joaquín", "Goles": 0},
-    "Enes Unal": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
-    "Hugo Duro": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
+    "Borja Iglesias": {"Jugador": "Ejkar", "Goles": 0},
+    "Lookman": {"Jugador": "Sierra", "Goles": 0},
+    "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
+    "Budimir": {"Jugador": "Mírete", "Goles": 0},
+    "Mikautadze": {"Jugador": "Miguel Ángel", "Goles": 0},
+    "Mikel Oyarzabal": {"Jugador": "Juan", "Goles": 0},
+    "Julián Álvarez": {"Jugador": "Joaquín", "Goles": 0},
+    "Sørloth": {"Jugador": "Joaquín", "Goles": 0},
+    "Enes Unal": {"Jugador": "Telenti", "Goles": 0},
+    "Hugo Duro": {"Jugador": "Telenti", "Goles": 0},
+    
 }
 
 puntos_apuesta = {
