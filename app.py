@@ -1,3 +1,4 @@
+import base64
 import csv
 from datetime import datetime
 import os
@@ -21,10 +22,19 @@ def guardar_ganador(nombre):
             writer.writerow(["Nombre", "Fecha y Hora"])
         writer.writerow([nombre.strip(), datetime.now().strftime("%d/%m/%Y %H:%M")])
 
+# --- FUNCIÓN PARA CONVERTIR IMÁGENES A BASE64 ---
+def obtener_imagen_base64(ruta):
+    if os.path.exists(ruta):
+        with open(ruta, "rb") as f:
+            data = f.read()
+        encoded = base64.b64encode(data).decode()
+        return f"data:image/png;base64,{encoded}"
+    return ""
+
 # --- CONFIGURACIÓN DE LOS PARTICIPANTES Y SUS EQUIPOS ---
 porra_equipos = {
     "Ejkar": ["Athletic Club", "Elche"],
-    "Sierra": ["Real Betis", "Málaga"],  # <-- Málaga añadido aquí
+    "Sierra": ["Real Betis", "Málaga"],
     "Vecina": ["Real Sociedad", "Racing"],
     "Mírete": ["Celta", "Levante"],
     "Miguel Ángel": ["Valencia", "Alavés"],
@@ -41,7 +51,7 @@ puntos_equipos_valores = {
     "Sevilla": 0, "Osasuna": 0, "Espanyol": 0, "Deportivo": 0,
 }
 
-# --- GOLES DE LOS GOLEADORES ELEGIDOS (Actualización Manual) ---
+# --- GOLES DE LES GOLEADORES ELEGIDOS (Actualización Manual) ---
 porra_goleadores = {
     "Ejkar": {"Borja Iglesias": 0},
     "Sierra": {},
@@ -59,12 +69,12 @@ puntos_apuesta = {
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
 }
 
-# --- ARCHIVOS LOCALES DE LOS ESCUDOS (Carpeta /img) ---
+# --- RUTAS DE LOS ESCUDOS EN LA CARPETA /img ---
 escudos_archivos = {
     "Athletic Club": "img/athletic.png",
     "Elche": "img/elche.png",
     "Real Betis": "img/betis.png",
-    "Málaga": "img/malaga.png",  # <-- Ruta del escudo del Málaga
+    "Málaga": "img/malaga.png",
     "Real Sociedad": "img/realsociedad.png",
     "Racing": "img/racing.png",
     "Celta": "img/celta.png",
@@ -92,8 +102,9 @@ for jugador, equipos in porra_equipos.items():
     equipos_con_escudo = []
     for eq in equipos:
         ruta_img = escudos_archivos.get(eq, "")
-        if ruta_img and os.path.exists(ruta_img):
-            html_img = f'<img src="{ruta_img}" width="22" style="vertical-align: middle; margin-right: 5px;"> {eq}'
+        base64_img = obtener_imagen_base64(ruta_img)
+        if base64_img:
+            html_img = f'<img src="{base64_img}" width="22" style="vertical-align: middle; margin-right: 5px;"> {eq}'
         else:
             html_img = f"⚽ {eq}"
         equipos_con_escudo.append(html_img)
