@@ -5,7 +5,7 @@ import plotly.express as px
 import streamlit as st
 
 # ==============================================================================
-# CONFIGURACIÓN
+# CONFIGURACIÓN DE LA INTERFAZ
 # ==============================================================================
 
 st.set_page_config(
@@ -32,9 +32,10 @@ def obtener_imagen_base64(ruta):
 
 
 # ==============================================================================
-# ESCUDOS DE LOS EQUIPOS
-# Los nombres de las claves deben coincidir exactamente con "Equipo"
-# dentro de porra_goleadores.
+# ESCUDOS
+# ==============================================================================
+# La clave del diccionario es el nombre que utilizaremos en todo el programa.
+# El valor es el nombre/ruta del PNG dentro de la carpeta img/
 # ==============================================================================
 
 escudos_archivos = {
@@ -54,12 +55,20 @@ escudos_archivos = {
     "Osasuna": "img/osasuna.png",
     "Espanyol": "img/espanyol.png",
     "Deportivo": "img/deportivo.png",
+
+    # Nuevos escudos utilizados por los goleadores
+    "Atlético de Madrid": "img/atletico.png",
+    "Villarreal": "img/villarreal.png",
 }
 
 
 # ==============================================================================
-# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS
+# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+# EQUIPOS ASIGNADOS A CADA PARTICIPANTE
+# ------------------------------------------------------------------------------
 
 asig_equipos = {
     "Ejkar": ["Athletic Club", "Elche"],
@@ -72,6 +81,10 @@ asig_equipos = {
     "Telenti": ["Espanyol", "Deportivo"],
 }
 
+
+# ------------------------------------------------------------------------------
+# ESTADÍSTICAS DE LOS EQUIPOS
+# ------------------------------------------------------------------------------
 
 stats_equipos = {
     "Athletic Club": {"G": 0, "E": 0, "P": 0},
@@ -93,12 +106,12 @@ stats_equipos = {
 }
 
 
-# ==============================================================================
-# 🎯 GOLEADORES
+# ------------------------------------------------------------------------------
+# 🎯 PORRA DE GOLEADORES
 #
-# "Equipo" debe coincidir exactamente con una clave de escudos_archivos.
-# Así no necesitas ningún diccionario adicional.
-# ==============================================================================
+# "Equipo" coincide EXACTAMENTE con las claves de escudos_archivos.
+# Solo tendrás que modificar aquí los goles durante la temporada.
+# ------------------------------------------------------------------------------
 
 porra_goleadores = {
     "Borja Iglesias": {
@@ -106,6 +119,7 @@ porra_goleadores = {
         "Equipo": "Celta",
         "Goles": 0
     },
+
     "Cucho Hernández": {
         "Jugador": "Ejkar",
         "Equipo": "Real Betis Balompie",
@@ -114,9 +128,10 @@ porra_goleadores = {
 
     "Lookman": {
         "Jugador": "Sierra",
-        "Equipo": "Athletic Club",
+        "Equipo": "Atlético de Madrid",
         "Goles": 0
     },
+
     "Isi Palazón": {
         "Jugador": "Sierra",
         "Equipo": "Rayo Vallecano",
@@ -125,12 +140,13 @@ porra_goleadores = {
 
     "Aubameyang": {
         "Jugador": "Vecina",
-        "Equipo": "Real Sociedad",
+        "Equipo": "Villarreal",
         "Goles": 0
     },
+
     "Toni Martinez": {
         "Jugador": "Vecina",
-        "Equipo": "Racing",
+        "Equipo": "Alavés",
         "Goles": 0
     },
 
@@ -139,17 +155,19 @@ porra_goleadores = {
         "Equipo": "Osasuna",
         "Goles": 0
     },
+
     "Ayoze": {
         "Jugador": "Mírete",
-        "Equipo": "Levante",
+        "Equipo": "Villarreal",
         "Goles": 0
     },
 
     "Mikautadze": {
         "Jugador": "Miguel Ángel",
-        "Equipo": "Valencia",
+        "Equipo": "Villarreal",
         "Goles": 0
     },
+
     "Sancet": {
         "Jugador": "Miguel Ángel",
         "Equipo": "Athletic Club",
@@ -164,12 +182,13 @@ porra_goleadores = {
 
     "Julián Álvarez": {
         "Jugador": "Joaquín",
-        "Equipo": "Sevilla",
+        "Equipo": "Atlético de Madrid",
         "Goles": 0
     },
+
     "Sørloth": {
         "Jugador": "Joaquín",
-        "Equipo": "Sevilla",
+        "Equipo": "Atlético de Madrid",
         "Goles": 0
     },
 
@@ -178,6 +197,7 @@ porra_goleadores = {
         "Equipo": "Getafe",
         "Goles": 0
     },
+
     "Hugo Duro": {
         "Jugador": "Telenti",
         "Equipo": "Valencia",
@@ -186,9 +206,9 @@ porra_goleadores = {
 }
 
 
-# ==============================================================================
+# ------------------------------------------------------------------------------
 # PUNTOS DE APUESTAS
-# ==============================================================================
+# ------------------------------------------------------------------------------
 
 puntos_apuesta = {
     "Sierra": 0,
@@ -203,7 +223,7 @@ puntos_apuesta = {
 
 
 # ==============================================================================
-# RELACIÓN EQUIPO -> PARTICIPANTE
+# RELACIÓN EQUIPO → PARTICIPANTE
 # ==============================================================================
 
 equipo_a_jugador = {}
@@ -233,8 +253,12 @@ for eq, st_eq in stats_equipos.items():
 
     if base64_img:
         escudo_html = (
-            f'<img src="{base64_img}" width="24" '
-            f'style="vertical-align: middle; margin-right: 8px;">'
+            f'<img src="{base64_img}" '
+            f'width="24" '
+            f'height="24" '
+            f'style="vertical-align: middle; '
+            f'margin-right: 8px; '
+            f'object-fit: contain;">'
             f'{eq}'
         )
     else:
@@ -254,39 +278,50 @@ for eq, st_eq in stats_equipos.items():
 
 df_equipos = (
     pd.DataFrame(filas_equipos)
-    .sort_values(by="Puntos", ascending=False)
+    .sort_values(
+        by="Puntos",
+        ascending=False
+    )
     .reset_index(drop=True)
 )
 
 
 # ==============================================================================
 # CONSTRUCCIÓN DE LA TABLA DE GOLEADORES
-# Aquí se añade automáticamente el escudo del equipo junto al nombre.
 # ==============================================================================
 
 filas_goleadores = []
 
-for goleador, info in porra_goleadores.items():
+for gol, info in porra_goleadores.items():
 
     equipo = info["Equipo"]
 
-    # Buscamos el PNG directamente en escudos_archivos
+    # Buscamos automáticamente el PNG correspondiente al equipo
     ruta_img = escudos_archivos.get(equipo, "")
+
+    # Convertimos el PNG a base64
     base64_img = obtener_imagen_base64(ruta_img)
 
+    # Si existe el escudo, lo colocamos delante del nombre del goleador
     if base64_img:
+
         goleador_html = (
-            f'<img src="{base64_img}" width="28" '
-            f'style="vertical-align: middle; margin-right: 8px;">'
-            f'{goleador}'
+            f'<img src="{base64_img}" '
+            f'width="24" '
+            f'height="24" '
+            f'style="vertical-align: middle; '
+            f'margin-right: 8px; '
+            f'object-fit: contain;">'
+            f'{gol}'
         )
+
     else:
-        # Si no encuentra el escudo, muestra el nombre igualmente
-        goleador_html = f"⚽ {goleador}"
+        goleador_html = f"⚽ {gol}"
 
     filas_goleadores.append({
         "Goleador": goleador_html,
         "Jugador": info["Jugador"],
+        "Equipo": equipo,
         "Goles": info["Goles"],
     })
 
@@ -294,9 +329,13 @@ for goleador, info in porra_goleadores.items():
 df_goleadores = pd.DataFrame(filas_goleadores)
 
 if not df_goleadores.empty:
+
     df_goleadores = (
         df_goleadores
-        .sort_values(by="Goles", ascending=False)
+        .sort_values(
+            by="Goles",
+            ascending=False
+        )
         .reset_index(drop=True)
     )
 
@@ -311,23 +350,33 @@ for jug in asig_equipos.keys():
 
     eqs_jugador = asig_equipos[jug]
 
+    # Puntos obtenidos por los dos equipos del participante
     pts_eqs = sum(
-        df_equipos.loc[
-            df_equipos["Equipo_Nombre"] == eq,
-            "Puntos"
-        ].values[0]
-        for eq in eqs_jugador
-        if eq in df_equipos["Equipo_Nombre"].values
+        [
+            df_equipos.loc[
+                df_equipos["Equipo_Nombre"] == eq,
+                "Puntos"
+            ].values[0]
+
+            for eq in eqs_jugador
+
+            if eq in df_equipos["Equipo_Nombre"].values
+        ]
     )
 
+    # Goles de sus dos goleadores
     goles_jugador = sum(
-        info["Goles"]
-        for info in porra_goleadores.values()
-        if info["Jugador"] == jug
+        [
+            info["Goles"]
+            for info in porra_goleadores.values()
+            if info["Jugador"] == jug
+        ]
     )
 
+    # Puntos adicionales de apuestas
     extra = puntos_apuesta.get(jug, 0)
 
+    # Total
     total = pts_eqs + goles_jugador + extra
 
     filas_general.append({
@@ -339,13 +388,16 @@ for jug in asig_equipos.keys():
             f"<span style='font-size: 1.2em; "
             f"font-weight: bold;'>{total}</span>"
         ),
-        "Total_Num": total,
+        "Total_Num": total
     })
 
 
 df_general = (
     pd.DataFrame(filas_general)
-    .sort_values(by="Total_Num", ascending=False)
+    .sort_values(
+        by="Total_Num",
+        ascending=False
+    )
     .reset_index(drop=True)
 )
 
@@ -381,11 +433,14 @@ st.markdown(
         .styled-table td {
             padding: 10px 14px;
             border-bottom: 1px solid #444444;
-            vertical-align: middle;
         }
 
         .styled-table tbody tr:nth-of-type(even) {
             background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .styled-table td:first-child {
+            vertical-align: middle;
         }
 
     </style>
@@ -402,7 +457,7 @@ col1, col2 = st.columns(2)
 
 
 # ------------------------------------------------------------------------------
-# TABLA DE EQUIPOS
+# ⚽ CLASIFICACIÓN DE EQUIPOS
 # ------------------------------------------------------------------------------
 
 with col1:
@@ -436,7 +491,7 @@ with col1:
 
 
 # ------------------------------------------------------------------------------
-# TABLA DE GOLEADORES
+# 🎯 TABLA DE GOLEADORES
 # ------------------------------------------------------------------------------
 
 with col2:
@@ -467,15 +522,19 @@ with col2:
         )
 
     else:
-
         st.info("No hay goleadores registrados todavía.")
 
 
 # ==============================================================================
-# CLASIFICACIÓN GENERAL
+# SEPARADOR
 # ==============================================================================
 
 st.markdown("---")
+
+
+# ==============================================================================
+# 🏆 CLASIFICACIÓN GENERAL
+# ==============================================================================
 
 st.subheader("🏆 Clasificación General (Participantes)")
 
@@ -504,10 +563,15 @@ st.markdown(
 
 
 # ==============================================================================
-# GRÁFICA DE PUNTOS TOTALES
+# SEPARADOR
 # ==============================================================================
 
 st.markdown("---")
+
+
+# ==============================================================================
+# 📊 GRÁFICA DE PUNTOS TOTALES
+# ==============================================================================
 
 st.subheader("📊 Gráfica de Puntos Totales")
 
@@ -537,7 +601,6 @@ st.plotly_chart(
     fig_barras,
     use_container_width=True
 )
-
 
 import os
 import base64
