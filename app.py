@@ -22,8 +22,8 @@ def obtener_imagen_base64(ruta):
 escudos_archivos = {
     "Athletic Club": "img/athletic.png",
     "Elche": "img/elche.png",
-    "Real Betis": "img/betis.png",
-    "Málaga": "img/malaga.png",
+    "Real Betis Balompie": "img/betis.png",
+    "Malaga": "img/malaga.png",
     "Real Sociedad": "img/realsociedad.png",
     "Racing": "img/racing.png",
     "Celta": "img/celta.png",
@@ -39,13 +39,13 @@ escudos_archivos = {
 }
 
 # ==============================================================================
-# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA
+# 📝 ÚNICO SITIO DONDE SE ACTUALIZAN LOS DATOS DE LA JORNADA (DRAFT ACTUALIZADO)
 # ==============================================================================
 
-# Relación de qué jugador tiene qué equipos
+# Relación de qué jugador tiene qué equipos según el draft
 asig_equipos = {
     "Ejkar": ["Athletic Club", "Elche"],
-    "Sierra": ["Real Betis", "Málaga"],
+    "Sierra": ["Real Betis Balompie", "Malaga"],
     "Vecina": ["Real Sociedad", "Racing"],
     "Mírete": ["Celta", "Levante"],
     "Miguel Ángel": ["Valencia", "Alavés"],
@@ -58,8 +58,8 @@ asig_equipos = {
 stats_equipos = {
     "Athletic Club": {"G": 0, "E": 0, "P": 0},
     "Elche": {"G": 0, "E": 0, "P": 0},
-    "Real Betis": {"G": 0, "E": 0, "P": 0},
-    "Málaga": {"G": 0, "E": 0, "P": 0},
+    "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
+    "Malaga": {"G": 0, "E": 0, "P": 0},
     "Real Sociedad": {"G": 0, "E": 0, "P": 0},
     "Racing": {"G": 0, "E": 0, "P": 0},
     "Celta": {"G": 0, "E": 0, "P": 0},
@@ -74,18 +74,21 @@ stats_equipos = {
     "Deportivo": {"G": 0, "E": 0, "P": 0},
 }
 
-# Goleadores elegidos y los goles que llevan
+# Goleadores elegidos en el draft con su equipo correspondiente y los goles que llevan
 porra_goleadores = {
     "Borja Iglesias": {"Equipo": "Athletic Club", "Jugador": "Ejkar", "Goles": 0},
+    "Lookman": {"Equipo": "Real Betis Balompie", "Jugador": "Sierra", "Goles": 0},
     "Aubameyang": {"Equipo": "Real Sociedad", "Jugador": "Vecina", "Goles": 0},
     "Budimir": {"Equipo": "Celta", "Jugador": "Mírete", "Goles": 0},
     "Mikautadze": {"Equipo": "Valencia", "Jugador": "Miguel Ángel", "Goles": 0},
     "Mikel Oyarzabal": {"Equipo": "Getafe", "Jugador": "Juan", "Goles": 0},
     "Julián Álvarez": {"Equipo": "Sevilla", "Jugador": "Joaquín", "Goles": 0},
-    "Enes Ünal": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
+    "Sørloth": {"Equipo": "Sevilla", "Jugador": "Joaquín", "Goles": 0},
+    "Enes Unal": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
+    "Hugo Duro": {"Equipo": "Espanyol", "Jugador": "Telenti", "Goles": 0},
 }
 
-# Puntos de apuesta o extras de mesa por participante (opcional, por si se usa en el futuro)
+# Puntos de apuesta o extras de mesa por participante
 puntos_apuesta = {
     "Sierra": 0, "Joaquín": 0, "Ejkar": 0, "Vecina": 0,
     "Telenti": 0, "Miguel Ángel": 0, "Mírete": 0, "Juan": 0,
@@ -159,13 +162,9 @@ if not df_goleadores.empty:
 filas_general = []
 for jug in asig_equipos.keys():
     eqs_jugador = asig_equipos[jug]
-    # Puntos sumados por sus equipos
     pts_eqs = sum([df_equipos.loc[df_equipos["Equipo_Nombre"] == eq, "Puntos"].values[0] for eq in eqs_jugador if eq in df_equipos["Equipo_Nombre"].values])
     
-    # Goles sumados por sus goleadores
     goles_jugador = sum([info["Goles"] for info in porra_goleadores.values() if info["Jugador"] == jug])
-    
-    # Extras / Apuestas
     extra = puntos_apuesta.get(jug, 0)
     
     total = pts_eqs + goles_jugador + extra
@@ -175,7 +174,7 @@ for jug in asig_equipos.keys():
         "Puntos de Equipos": pts_eqs,
         "Goles": goles_jugador,
         "Total": f"<span style='font-size: 1.2em; font-weight: bold;'>{total}</span>",
-        "Total_Num": total # Columna oculta para ordenar correctamente
+        "Total_Num": total
     })
 
 df_general = pd.DataFrame(filas_general).sort_values(by="Total_Num", ascending=False).reset_index(drop=True)
