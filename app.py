@@ -456,7 +456,7 @@ html_pesca_template = """
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
         let randomVx = getRandomSpeed(2.5, 4,5);
-        let randomDepthSpeed = getRandomSpeed(0.04, 1);
+        let randomDepthSpeed = getRandomSpeed(0.04, 0.11);
 
         objects.push({
             id: Math.random().toString(36),
