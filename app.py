@@ -208,11 +208,6 @@ st.plotly_chart(fig_barras, use_container_width=True)
 
 
 
-
-
-
-
-
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
 # ==============================================================================
@@ -230,12 +225,11 @@ html_pesca_template = """
 <style>
     body { margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; user-select: none; touch-action: none; background: #87CEEB; }
     #game-container { position: relative; width: 100%; max-width: 800px; margin: 0 auto; background: #000; }
-    #game-canvas { background: linear-gradient(to bottom, #87CEEB 0%, #87CEEB 35%, #1E90FF 35%, #051937 100%); display: block; width: 100%; height: 500px; }
+    #game-canvas { display: block; width: 100%; height: 500px; }
     #ui { position: absolute; top: 10px; left: 10px; color: white; text-shadow: 1px 1px 2px black; pointer-events: none; font-weight: bold; font-size: 13px; z-index: 10; }
     #fullscreen-btn { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: #ffeb3b; border: 2px solid #ffeb3b; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 11px; cursor: pointer; z-index: 50; display: block; }
-    #giant-alert { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 30px; font-weight: bold; text-align: center; background: rgba(0, 0, 0, 0.95); padding: 35px; border-radius: 20px; box-shadow: 0 0 30px rgba(255,255,255,0.4); display: none; z-index: 40; width: 85%; max-width: 600px; box-sizing: border-box; border: 4px solid #ffeb3b; line-height: 1.4; }
-    #penalty-timer { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff4444; font-size: 35px; font-weight: bold; display: none; text-align: center; background: rgba(0,0,0,0.85); padding: 20px; border-radius: 15px; z-index: 20; }
-    #win-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 15px; text-align: center; display: none; box-shadow: 0 0 25px rgba(0,0,0,0.5); z-index: 30; }
+    #giant-alert { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; font-weight: bold; text-align: center; background: rgba(0, 0, 0, 0.95); padding: 25px; border-radius: 20px; display: none; z-index: 40; width: 85%; max-width: 500px; border: 4px solid #ffeb3b; }
+    #win-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: #333; padding: 25px; border-radius: 15px; text-align: center; display: none; box-shadow: 0 0 25px rgba(0,0,0,0.5); z-index: 30; }
     .btn { background: #2ecc71; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 12px; }
 </style>
 </head>
@@ -245,16 +239,14 @@ html_pesca_template = """
     <button id="fullscreen-btn">📱 FULLSCREEN</button>
     <div id="ui">
         <div style="color: #ffeb3b; font-size: 12px; margin-bottom: 4px; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 4px;">🎮 <b>Muelle de Juan</b></div>
-        <div>👤 Puntos: <span id="score">0</span> / 10 <span id="acid-indicator" style="color:#2ecc71; font-weight:bold; display:none;">⚠️ LLUVIA ÁCIDA</span></div>
+        <div>👤 Puntos: <span id="score">0</span> / 10</div>
         <div>⏱️ Tiempo: <span id="clock">0.0</span>s</div>
         <div id="instruction-text" style="color: #ffeb3b; margin-top: 2px;">Toca para pescar</div>
     </div>
     <div id="giant-alert"></div>
-    <div id="penalty-timer">🟥 PENALIZACIÓN<br><span id="p-seconds">5</span>s</div>
     <div id="win-screen">
         <h2>🏆 ¡DESAFÍO COMPLETADO!</h2>
         <p id="final-time-text"></p>
-        <button id="save-pesca-btn" class="btn">💾 Registrar Récord</button>
     </div>
     <canvas id="game-canvas"></canvas>
 </div>
@@ -265,91 +257,133 @@ html_pesca_template = """
     const scoreEl = document.getElementById('score');
     const clockEl = document.getElementById('clock');
     const winScreen = document.getElementById('win-screen');
-    const penaltyEl = document.getElementById('penalty-timer');
-    const pSecondsEl = document.getElementById('p-seconds');
     const giantAlert = document.getElementById('giant-alert');
     const container = document.getElementById('game-container');
-    const acidIndicator = document.getElementById('acid-indicator');
 
-    // Carga separada de la imagen para asegurar el renderizado
     const pescadorImg = new Image();
     pescadorImg.src = "data:image/png;base64,{{JUAN_IMAGE_BASE64}}";
-    
-    let width = 800; let height = 500;
-    let score = 0; let accumulatedTime = 0; let lastTimeCheck = Date.now(); 
-    let isGameOver = false; let penaltyTime = 0; let inputState = 'angle';
-    let angleParam = 0.5; let angleSpeed = 0.06; let fixedAngle = 0; let chargeForce = 0;
-    let objects = []; let hook = { x: 0, y: 0, mode: 'straight' };
 
+    let width = 800; 
+    let height = 500;
+    
     function resizeGame() {
-        width = container.offsetWidth || 800;
+        width = container.clientWidth || 800;
         canvas.width = width;
         canvas.height = height;
     }
     window.addEventListener('resize', resizeGame);
     resizeGame();
 
-    function triggerGiantAlert(message, borderColor = '#ffeb3b') {
-        giantAlert.innerHTML = message.replace(/\\n/g, "<br>");
-        giantAlert.style.borderColor = borderColor;
-        giantAlert.style.display = 'block';
-        setTimeout(() => { giantAlert.style.display = 'none'; }, 2000);
-    }
+    let score = 0; 
+    let startTime = Date.now(); 
+    let isGameOver = false; 
+    let inputState = 'angle';
+    let angleParam = 0.5; 
+    let angleSpeed = 0.04;
+    let objects = [];
 
     function spawnObject() {
-        if (objects.length >= 10) return;
+        if (objects.length >= 8) return;
         objects.push({
-            x: Math.random() * width, y: 150 + Math.random() * 300,
-            vx: (Math.random() - 0.5) * 4,
-            id: Math.random()
+            x: Math.random() * width,
+            y: 220 + Math.random() * 240,
+            vx: (Math.random() - 0.5) * 3
         });
     }
-    for(let i=0; i<8; i++) spawnObject();
+    for(let i=0; i<6; i++) spawnObject();
 
     function update() {
         if (isGameOver) return;
-        const now = Date.now();
-        accumulatedTime += (now - lastTimeCheck);
-        lastTimeCheck = now;
-        clockEl.innerText = (accumulatedTime / 1000).toFixed(1);
+        
+        // El tiempo corre de forma continua desde que inicia
+        let elapsed = (Date.now() - startTime) / 1000;
+        clockEl.innerText = elapsed.toFixed(1);
 
-        // Lógica de ángulo
+        // Movimiento del ángulo de la caña
         if (inputState === 'angle') {
             angleParam += angleSpeed;
             if (angleParam > Math.PI || angleParam < 0) angleSpeed *= -1;
-        } else if (inputState === 'force') {
-            chargeForce = Math.min(chargeForce + 3, 100);
         }
+
+        // Movimiento de los objetos en el agua
+        objects.forEach(o => {
+            o.x += o.vx;
+            if (o.x < 20 || o.x > width - 20) o.vx *= -1;
+        });
     }
 
     function draw() {
         update();
         ctx.clearRect(0, 0, width, height);
         
-        // Fondo
         let seaLine = 180;
-        ctx.fillStyle = '#70b5d3'; ctx.fillRect(0, 0, width, seaLine);
-        ctx.fillStyle = '#1E90FF'; ctx.fillRect(0, seaLine, width, height - seaLine);
+        
+        // Cielo
+        ctx.fillStyle = '#70b5d3'; 
+        ctx.fillRect(0, 0, width, seaLine);
+        
+        // Mar
+        ctx.fillStyle = '#1E90FF'; 
+        ctx.fillRect(0, seaLine, width, height - seaLine);
 
-        // Dibujo Pescador
+        // Muelle de madera
         ctx.fillStyle = '#5c3a21'; 
-        ctx.fillRect(width/2 - 35, seaLine - 15, 70, 15);
-        if (pescadorImg.complete) {
-            ctx.drawImage(pescadorImg, width/2 - 25, seaLine - 75, 50, 60);
+        ctx.fillRect(width/2 - 40, seaLine - 15, 80, 18);
+
+        // Pescador
+        if (pescadorImg.complete && pescadorImg.naturalWidth !== 0) {
+            ctx.drawImage(pescadorImg, width/2 - 22, seaLine - 75, 44, 60);
+        } else {
+            ctx.fillStyle = '#ff5722';
+            ctx.fillRect(width/2 - 20, seaLine - 70, 40, 55);
         }
 
-        // Dibujo Peces
+        // Peces / Objetos en el agua
         objects.forEach(o => {
-            ctx.beginPath(); ctx.arc(o.x, o.y, 20, 0, Math.PI*2);
-            ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill();
+            ctx.beginPath(); 
+            ctx.arc(o.x, o.y, 16, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; 
+            ctx.fill();
+            ctx.strokeStyle = '#051937';
+            ctx.lineWidth = 2;
+            ctx.stroke();
         });
+
+        // Línea de la caña de pescar (Radar / Ángulo)
+        let radarRadius = 50; 
+        let radarX = width / 2; 
+        let radarY = seaLine - 15;
+        
+        let ballX = radarX + Math.cos(angleParam) * radarRadius;
+        let ballY = radarY + Math.sin(angleParam) * radarRadius;
+        
+        ctx.beginPath(); 
+        ctx.moveTo(radarX, radarY); 
+        ctx.lineTo(ballX, ballY);
+        ctx.strokeStyle = '#ffeb3b'; 
+        ctx.lineWidth = 3; 
+        ctx.stroke();
+        
+        ctx.beginPath(); 
+        ctx.arc(ballX, ballY, 7, 0, Math.PI*2);
+        ctx.fillStyle = '#ffeb3b'; 
+        ctx.fill();
 
         requestAnimationFrame(draw);
     }
 
-    container.addEventListener('mousedown', () => { if(inputState === 'angle') { inputState = 'force'; chargeForce = 0; } });
-    container.addEventListener('mouseup', () => { if(inputState === 'force') inputState = 'angle'; });
-    
+    // Interacción al hacer clic / tocar
+    container.addEventListener('click', () => {
+        if (isGameOver) return;
+        score++;
+        scoreEl.innerText = score;
+        if (score >= 10) {
+            isGameOver = true;
+            winScreen.style.display = 'block';
+            document.getElementById('final-time-text').innerText = "¡Completado en " + clockEl.innerText + "s!";
+        }
+    });
+
     draw();
 </script>
 </body>
