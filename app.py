@@ -40,7 +40,7 @@ GITHUB_API_URL = (
 )
 
 # Zona horaria española.
-# Europe/Madrid cambia automáticamente entre horario de verano e invierno.
+# Europe/Madrid contempla automáticamente horario de verano/invierno.
 ZONA_HORARIA_ESPAÑA = ZoneInfo("Europe/Madrid")
 
 
@@ -87,10 +87,6 @@ def obtener_historico_github():
         timeout=10
     )
 
-    # --------------------------------------------------------------------------
-    # Archivo encontrado
-    # --------------------------------------------------------------------------
-
     if respuesta.status_code == 200:
 
         datos = respuesta.json()
@@ -117,10 +113,6 @@ def obtener_historico_github():
 
         return df, datos["sha"]
 
-    # --------------------------------------------------------------------------
-    # Archivo no encontrado
-    # --------------------------------------------------------------------------
-
     elif respuesta.status_code == 404:
 
         df = pd.DataFrame(
@@ -133,10 +125,6 @@ def obtener_historico_github():
 
         return df, None
 
-    # --------------------------------------------------------------------------
-    # Error
-    # --------------------------------------------------------------------------
-
     else:
 
         raise Exception(
@@ -148,7 +136,7 @@ def obtener_historico_github():
 
 def guardar_historico_github(df, sha):
     """
-    Guarda el DataFrame del histórico en GitHub.
+    Guarda el histórico actualizado en GitHub.
     """
 
     token = st.secrets["GITHUB_TOKEN"]
@@ -173,8 +161,6 @@ def guardar_historico_github(df, sha):
         "branch": GITHUB_RAMA
     }
 
-    # Para modificar un archivo existente,
-    # GitHub necesita el SHA actual.
     if sha is not None:
 
         datos["sha"] = sha
@@ -199,17 +185,10 @@ def actualizar_historico_puntos(df_general):
     """
     Actualiza el histórico de puntos.
 
-    Funcionamiento:
-
-    - Lee el histórico existente de GitHub.
-    - Obtiene la fecha actual en España.
-    - Elimina los registros existentes de hoy.
-    - Añade los puntos actuales.
-    - Conserva todos los días anteriores.
-    - Guarda el resultado en GitHub.
-
-    Por tanto, si la página se actualiza varias veces el mismo día,
-    el dato de ese día se sobrescribe en lugar de duplicarse.
+    - Un registro por jugador y día.
+    - Si los puntos de hoy no han cambiado, no modifica GitHub.
+    - Si los puntos de hoy han cambiado, sobrescribe el día actual.
+    - Los días anteriores se conservan.
     """
 
     fecha_hoy = obtener_fecha_españa()
@@ -221,7 +200,7 @@ def actualizar_historico_puntos(df_general):
     historico, sha = obtener_historico_github()
 
     # --------------------------------------------------------------------------
-    # Asegurar estructura correcta
+    # Normalizar histórico
     # --------------------------------------------------------------------------
 
     if historico.empty:
@@ -258,7 +237,7 @@ def actualizar_historico_puntos(df_general):
         )
 
     # --------------------------------------------------------------------------
-    # Crear los datos actuales
+    # Crear datos actuales
     # --------------------------------------------------------------------------
 
     datos_actuales = pd.DataFrame({
@@ -282,9 +261,49 @@ def actualizar_historico_puntos(df_general):
     })
 
     # --------------------------------------------------------------------------
+    # Comprobar si los datos de HOY ya son exactamente iguales
+    # --------------------------------------------------------------------------
+
+    historico_hoy = historico[
+        historico["Fecha"] == fecha_hoy
+    ].copy()
+
+    if not historico_hoy.empty:
+
+        historico_hoy = (
+            historico_hoy[
+                [
+                    "Jugador",
+                    "Puntos"
+                ]
+            ]
+            .sort_values(
+                "Jugador"
+            )
+            .reset_index(drop=True)
+        )
+
+        actuales_hoy = (
+            datos_actuales[
+                [
+                    "Jugador",
+                    "Puntos"
+                ]
+            ]
+            .sort_values(
+                "Jugador"
+            )
+            .reset_index(drop=True)
+        )
+
+        if historico_hoy.equals(actuales_hoy):
+
+            # No ha cambiado nada.
+            # No hacemos ningún commit.
+            return historico
+
+    # --------------------------------------------------------------------------
     # Eliminar los datos de HOY
-    #
-    # Esto permite sobrescribir el dato del mismo día.
     # --------------------------------------------------------------------------
 
     historico = historico[
@@ -374,7 +393,6 @@ escudos_archivos = {
     "Espanyol": "img/espanyol.png",
     "Deportivo": "img/deportivo.png",
 
-    # Nuevos escudos utilizados por los goleadores
     "Atlético de Madrid": "img/atletico.png",
     "Villarreal": "img/villarreal.png",
 }
@@ -434,101 +452,22 @@ asig_equipos = {
 
 stats_equipos = {
 
-    "Athletic Club": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Elche": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Real Betis Balompie": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Malaga": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Real Sociedad": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Racing": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Celta": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Levante": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Valencia": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Alavés": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Getafe": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Rayo Vallecano": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Sevilla": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Osasuna": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Espanyol": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
-
-    "Deportivo": {
-        "G": 0,
-        "E": 0,
-        "P": 0
-    },
+    "Athletic Club": {"G": 0, "E": 0, "P": 0},
+    "Elche": {"G": 0, "E": 0, "P": 0},
+    "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
+    "Malaga": {"G": 0, "E": 0, "P": 0},
+    "Real Sociedad": {"G": 0, "E": 0, "P": 0},
+    "Racing": {"G": 0, "E": 0, "P": 0},
+    "Celta": {"G": 0, "E": 0, "P": 0},
+    "Levante": {"G": 0, "E": 0, "P": 0},
+    "Valencia": {"G": 0, "E": 0, "P": 0},
+    "Alavés": {"G": 0, "E": 0, "P": 0},
+    "Getafe": {"G": 0, "E": 0, "P": 0},
+    "Rayo Vallecano": {"G": 0, "E": 0, "P": 0},
+    "Sevilla": {"G": 0, "E": 0, "P": 0},
+    "Osasuna": {"G": 0, "E": 0, "P": 0},
+    "Espanyol": {"G": 0, "E": 0, "P": 0},
+    "Deportivo": {"G": 0, "E": 0, "P": 0},
 }
 
 
@@ -809,9 +748,7 @@ for jug in asig_equipos.keys():
 
     eqs_jugador = asig_equipos[jug]
 
-    # --------------------------------------------------------------------------
-    # Puntos de los equipos
-    # --------------------------------------------------------------------------
+    # Puntos obtenidos por los equipos
 
     pts_eqs = sum(
         [
@@ -830,9 +767,7 @@ for jug in asig_equipos.keys():
         ]
     )
 
-    # --------------------------------------------------------------------------
-    # Goles de los goleadores
-    # --------------------------------------------------------------------------
+    # Goles de sus goleadores
 
     goles_jugador = sum(
         [
@@ -846,18 +781,14 @@ for jug in asig_equipos.keys():
         ]
     )
 
-    # --------------------------------------------------------------------------
-    # Puntos de apuestas
-    # --------------------------------------------------------------------------
+    # Puntos adicionales de apuestas
 
     extra = puntos_apuesta.get(
         jug,
         0
     )
 
-    # --------------------------------------------------------------------------
     # Total
-    # --------------------------------------------------------------------------
 
     total = (
         pts_eqs
@@ -915,9 +846,6 @@ except Exception as error:
     st.code(
         str(error)
     )
-
-    # Para que la aplicación pueda seguir mostrando
-    # las tablas aunque falle el histórico.
 
     historico_puntos = pd.DataFrame(
         columns=[
@@ -1004,19 +932,16 @@ with col1:
         ]
     ]
 
-    st.markdown(
+    st.html(
         f"""
         <div class="dataframe-container">
-
             {df_mostrar_eq.to_html(
                 escape=False,
                 index=False,
                 classes="styled-table"
             )}
-
         </div>
-        """,
-        unsafe_allow_html=True
+        """
     )
 
 
@@ -1040,19 +965,16 @@ with col2:
             ]
         ]
 
-        st.markdown(
+        st.html(
             f"""
             <div class="dataframe-container">
-
                 {df_mostrar_gol.to_html(
                     escape=False,
                     index=False,
                     classes="styled-table"
                 )}
-
             </div>
-            """,
-            unsafe_allow_html=True
+            """
         )
 
     else:
@@ -1087,19 +1009,16 @@ df_mostrar_gen = df_general[
     ]
 ]
 
-st.markdown(
+st.html(
     f"""
     <div class="dataframe-container">
-
         {df_mostrar_gen.to_html(
             escape=False,
             index=False,
             classes="styled-table"
         )}
-
     </div>
-    """,
-    unsafe_allow_html=True
+    """
 )
 
 
@@ -1129,7 +1048,8 @@ else:
     historico_grafica = historico_puntos.copy()
 
     historico_grafica["Fecha"] = pd.to_datetime(
-        historico_grafica["Fecha"]
+        historico_grafica["Fecha"],
+        errors="coerce"
     )
 
     historico_grafica["Puntos"] = pd.to_numeric(
@@ -1142,6 +1062,7 @@ else:
         .dropna(
             subset=[
                 "Fecha",
+                "Jugador",
                 "Puntos"
             ]
         )
@@ -1194,7 +1115,6 @@ else:
         fig_lineas,
         use_container_width=True
     )
-
 
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
