@@ -75,17 +75,19 @@ stats_equipos = {
 }
 
 porra_goleadores = {
-    "Borja Iglesias": {"Equipo": None , "Jugador": "Ejkar", "Goles": 0},
-    "Lookman": {"Equipo": None ,"Jugador": "Sierra", "Goles": 0},
-    "Aubameyang": {"Equipo": None , "Jugador": "Vecina", "Goles": 0},
-    "Budimir": {"Equipo": None , "Jugador": "Mírete", "Goles": 0},
-    "Mikautadze": {"Equipo": None , "Jugador": "Miguel Ángel", "Goles": 0},
-    "Mikel Oyarzabal": {"Equipo": None , "Jugador": "Juan", "Goles": 0},
-    "Julián Álvarez": {"Equipo": None , "Jugador": "Joaquín", "Goles": 0},
-    "Sørloth": {"Equipo": None , "Jugador": "Joaquín", "Goles": 0},
-    "Enes Unal": {"Equipo": None , "Jugador": "Telenti", "Goles": 0},
-    "Hugo Duro": {"Equipo": None , "Jugador": "Telenti", "Goles": 0},
-    
+    "Borja Iglesias": {"Jugador": "Ejkar", "Goles": 0},
+    "Lookman": {"Jugador": "Sierra", "Goles": 0},
+    "Aubameyang": {"Jugador": "Vecina", "Goles": 0},
+    "Toni Martinez": {"Jugador": "Vecina", "Goles": 0},
+    "Budimir": {"Jugador": "Mírete", "Goles": 0},
+    "Ayoze": {"Jugador": "Mírete", "Goles": 0},
+    "Mikautadze": {"Jugador": "Miguel Ángel", "Goles": 0},
+    "Sancet": {"Jugador": "Miguel Ángel", "Goles": 0},
+    "Mikel Oyarzabal": {"Jugador": "Juan", "Goles": 0},
+    "Julián Álvarez": {"Jugador": "Joaquín", "Goles": 0},
+    "Sørloth": {"Jugador": "Joaquín", "Goles": 0},
+    "Enes Unal": {"Jugador": "Telenti", "Goles": 0},
+    "Hugo Duro": {"Jugador": "Telenti", "Goles": 0},
 }
 
 puntos_apuesta = {
@@ -123,17 +125,12 @@ for eq, st_eq in stats_equipos.items():
 
 df_equipos = pd.DataFrame(filas_equipos).sort_values(by="Puntos", ascending=False).reset_index(drop=True)
 
-# --- CONSTRUCCIÓN DE LA TABLA DE GOLEADORES (SIN COLUMNA EQUIPO) ---
+# --- CONSTRUCCIÓN DE LA TABLA DE GOLEADORES ---
 filas_goleadores = []
 for gol, info in porra_goleadores.items():
-    eq = info["Equipo"]
-    st_eq = stats_equipos.get(eq, {"G":0, "E":0, "P":0})
-    pj_equipo = st_eq["G"] + st_eq["E"] + st_eq["P"]
-        
     filas_goleadores.append({
         "Goleador": gol,
         "Jugador": info["Jugador"],
-        "PJ": pj_equipo,
         "Goles": info["Goles"]
     })
 
@@ -154,6 +151,7 @@ for jug in asig_equipos.keys():
         "Jugador": f"<b>{jug}</b>",
         "Puntos de Equipos": pts_eqs,
         "Goles": goles_jugador,
+        "Puntos de Apuestas": extra,
         "Total": f"<span style='font-size: 1.2em; font-weight: bold;'>{total}</span>",
         "Total_Num": total
     })
@@ -184,7 +182,7 @@ with col1:
 with col2:
     st.subheader("🎯 Tabla de Goleadores")
     if not df_goleadores.empty:
-        df_mostrar_gol = df_goleadores[["Goleador", "Jugador", "PJ", "Goles"]]
+        df_mostrar_gol = df_goleadores[["Goleador", "Jugador", "Goles"]]
         st.markdown(f'<div class="dataframe-container">{df_mostrar_gol.to_html(escape=False, index=False, classes="styled-table")}</div>', unsafe_allow_html=True)
     else:
         st.info("No hay goleadores registrados todavía.")
@@ -192,7 +190,7 @@ with col2:
 st.markdown("---")
 
 st.subheader("🏆 Clasificación General (Participantes)")
-df_mostrar_gen = df_general[["Jugador", "Puntos de Equipos", "Goles", "Total"]]
+df_mostrar_gen = df_general[["Jugador", "Puntos de Equipos", "Goles", "Puntos de Apuestas", "Total"]]
 st.markdown(f'<div class="dataframe-container">{df_mostrar_gen.to_html(escape=False, index=False, classes="styled-table")}</div>', unsafe_allow_html=True)
 
 st.markdown("---")
@@ -202,6 +200,7 @@ fig_barras = px.bar(df_general, x="Jugador", y="Total_Num", color="Jugador", tex
 max_pts = df_general["Total_Num"].max()
 fig_barras.update_layout(showlegend=False, xaxis_title="Participante", yaxis_title="Puntos Totales", yaxis=dict(range=[0, max_pts + 5 if max_pts > 0 else 10]))
 st.plotly_chart(fig_barras, use_container_width=True)
+
 
 
 
