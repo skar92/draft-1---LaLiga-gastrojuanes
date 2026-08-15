@@ -5,6 +5,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
+import json
 
 # Configuración de la interfaz de Streamlit
 st.set_page_config(page_title="Draft LaLiga 2026/27", layout="wide")
@@ -212,8 +213,62 @@ import streamlit.components.v1 as components
 # ==============================================================================
 # --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
 # ==============================================================================
+# ==============================================================================
+# --- 🏆 SISTEMA DE PERSISTENCIA Y RÉCORDS ---
+# ==============================================================================
+RECORDS_FILE = "records_pesca.json"
+
+def cargar_records():
+    if os.path.exists(RECORDS_FILE):
+        try:
+            with open(RECORDS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def guardar_record(nombre, tiempo):
+    records = cargar_records()
+    records.append({"nombre": nombre, "tiempo": float(tiempo)})
+    # Ordenar por menor tiempo (mejor récord primero)
+    records = sorted(records, key=lambda x: x["tiempo"])
+    with open(RECORDS_FILE, "w", encoding="utf-8") as f:
+        json.dump(records, f, ensure_ascii=False, indent=4)
+
+# ==============================================================================
+# --- 🎣 MINIJUEGO: LA PESCA DE JUAN ---
+# ==============================================================================
 st.markdown("---")
 st.subheader("🎣 Minijuego: La Pesca de Juan")
+
+# Gestión de parámetros al ganar la partida desde el canvas
+query_params = st.query_params
+if "win" in query_params and "time" in query_params:
+    tiempo_ganado = query_params["time"]
+    st.success(f"🎉 ¡Has completado el minijuego en **{tiempo_ganado} segundos**!")
+    
+    with st.form("form_registro_record"):
+        st.markdown("### 💾 Registrar Récord en la Web")
+        nombre_elegido = st.selectbox(
+            "Selecciona tu nombre del registro:", 
+            ['juan', 'telenti', 'sierra', 'ejkar', 'mirete', 'joaquin', 'miguel angel', 'vecina']
+        )
+        submitted = st.form_submit_button("Guardar Récord Definitivo")
+        if submitted:
+            guardar_record(nombre_elegido, tiempo_ganado)
+            st.success(f"¡Récord guardado correctamente para **{nombre_elegido}**!")
+            st.query_params.clear()
+            st.rerun()
+
+# Mostrar tabla de clasificación histórica permanente
+records_actuales = cargar_records()
+if records_actuales:
+    st.markdown("### 🏅 Tabla de Récords Históricos (Permanente)")
+    st.dataframe(
+        [{"Puesto": i+1, "Nombre": r["nombre"].capitalize(), "Tiempo (s)": r["tiempo"]} for i, r in enumerate(records_actuales)],
+        use_container_width=True,
+        hide_index=True
+    )
 
 def obtener_imagen_base64(ruta_relativa):
     try:
@@ -343,7 +398,7 @@ html_pesca_template = """
         return Math.random() < 0.5 ? val : -val;
     }
 
-    let angleSpeed = getRandomSpeed(0.04, 0.06);
+    let angleSpeed = getRandomSpeed(0.04, 0.09);
     let fixedAngle = 0; let chargeForce = 0;
     
     let heli = { x: 100, y: 35, vx: 4, nextChange: 0, radarWidth: 90, active: true, reactiveTime: 0 };
@@ -400,7 +455,7 @@ html_pesca_template = """
         let maxLifeTime = 25000 + Math.random() * 15000;
         let randomDepthPct = 0.45 + Math.random() * 0.45;
 
-        let randomVx = getRandomSpeed(2.5, 4.5);
+        let randomVx = getRandomSpeed(2.5, 7.5);
         let randomDepthSpeed = getRandomSpeed(0.04, 0.09);
 
         objects.push({
@@ -712,6 +767,12 @@ html_pesca_template = """
         winScreen.style.display = 'block';
         document.getElementById('final-time-text').innerText = "¡Completado en " + (accumulatedTime/1000).toFixed(2) + "s!";
     }
+
+    // Evento para registrar récord enviando el tiempo a Streamlit al hacer clic en el botón de la victoria
+    document.getElementById('save-pesca-btn').addEventListener('click', () => {
+        let finalTime = (accumulatedTime / 1000).toFixed(2);
+        window.location.href = window.location.pathname + '?win=true&time=' + finalTime;
+    });
 
     function draw() {
         update(); ctx.clearRect(0, 0, width, height);
