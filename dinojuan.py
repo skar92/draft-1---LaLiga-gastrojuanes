@@ -9,7 +9,6 @@ def obtener_imagen_base64(nombre_base, color_hex_fallback):
     folder = "img"
     extensiones = [".png", ".jpg", ".jpeg"]
     
-    # Buscar si existe el archivo con alguna de las extensiones permitidas
     for ext in extensiones:
         ruta_especifica = os.path.join(folder, nombre_base + ext)
         if os.path.exists(ruta_especifica):
@@ -17,7 +16,6 @@ def obtener_imagen_base64(nombre_base, color_hex_fallback):
             with open(ruta_especifica, "rb") as f:
                 return f"data:{mime};base64,{base64.b64encode(f.read()).decode()}"
             
-    # Fallback genérico: busca cualquier imagen válida en la carpeta si falta la específica
     if os.path.exists(folder):
         for f_name in os.listdir(folder):
             if f_name.lower().endswith(tuple(extensiones)):
@@ -29,7 +27,6 @@ def obtener_imagen_base64(nombre_base, color_hex_fallback):
                 
     return f"COLOR:{color_hex_fallback}"
 
-# Llamamos a la función pasando solo el nombre base (sin extensión)
 imagenes = {
     "dino": obtener_imagen_base64("oviedo_dino", "#2ecc71"),
     "obs_fijo": obtener_imagen_base64("ubres_dino", "#e74c3c"),
@@ -361,9 +358,10 @@ html_juego = f'''
             }}
         }});
 
-        let refY = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
-        let targetCamY = canvas.height * 0.6 - refY;
-        cameraY += (targetCamY - cameraY) * 0.1;
+        // CÁMARA DE DESPLAZAMIENTO VERTICAL (BACKGROUND SUBE/BAJA NATURALMENTE)
+        // La cámara sigue al dinosaurio pero con inercia suave, permitiendo ver el salto sin centrar bruscamente la cuesta.
+        let targetCamY = canvas.height * 0.65 - dino.y;
+        cameraY += (targetCamY - cameraY) * 0.08;
 
         dibujarEscena();
         if(juegoActivo) frameId = requestAnimationFrame(loop);
