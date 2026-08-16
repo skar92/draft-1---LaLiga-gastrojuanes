@@ -93,7 +93,6 @@ html_juego = f'''
 
     const imagenesCargadas = {{}};
     
-    // CARGAR Y LIMPIAR EL FONDO BLANCO UNA SOLA VEZ AL INICIAR
     for (let key in IMG_DATA) {{
         if (!IMG_DATA[key].startsWith("COLOR:")) {{
             let img = new Image();
@@ -158,7 +157,7 @@ html_juego = f'''
         propulsado: false, distPropulsion: 0
     }};
 
-    let tramos = [];
+    let secciones = [];
 
     function generarPregunta(nivelReal) {{
         let ops = ['+', '-'];
@@ -181,42 +180,43 @@ html_juego = f'''
         return {{ texto: b + " " + op + " " + c + " = " + resMostrado, correcta: esCorrecta ? "SI" : "NO" }};
     }}
 
-    function crearTramo(inicioX, inicioY) {{
+    // CREAR SECCIÓN CON BIFURCACIÓN ARRIBA Y ABAJO AL FINAL
+    function crearSeccion(inicioX, inicioY) {{
         let nv = Math.max(1, nivel + difDinamica);
-        let maxAngleDeg = Math.min(3 + (nv * 2), 18);
+        let maxAngleDeg = Math.min(3 + (nv * 1.5), 15);
         let anguloDeg = (Math.random() * maxAngleDeg * 2) - maxAngleDeg;
         let anguloRad = anguloDeg * Math.PI / 180;
         
-        let len = 3000; 
+        let len = 2800; 
         let yFinal = inicioY + Math.tan(anguloRad) * len;
         
         let preg = generarPregunta(nv);
         let topSign = Math.random() > 0.5 ? "SI" : "NO";
         let tieneTurbo = Math.random() < 0.35;
         
-        let entidadesTramo = [];
+        let entidadesSec = [];
         let numObstaculos = Math.floor(nv * 1.2) + 1;
         for(let i=0; i<numObstaculos; i++) {{
-            let ox = inicioX + 800 + Math.random() * (len - 1000);
+            let ox = inicioX + 600 + Math.random() * (len - 800);
             let tipo = Math.random() < 0.5 ? 'obs_fijo' : (Math.random() < 0.5 ? 'obs_lento' : 'obs_rapido');
-            entidadesTramo.push({{x: ox, tipo: tipo, activo: true, w: 40, h: 40}});
+            entidadesSec.push({{x: ox, tipo: tipo, activo: true, w: 40, h: 40}});
         }}
         
         let numSidras = 2 + Math.floor(Math.random() * 3);
         for(let i=0; i<numSidras; i++) {{
-            entidadesTramo.push({{x: inicioX + 500 + Math.random() * (len - 600), tipo: 'sidra', activo: true, w: 30, h: 30}});
+            entidadesSec.push({{x: inicioX + 400 + Math.random() * (len - 500), tipo: 'sidra', activo: true, w: 30, h: 30}});
         }}
         
         if(Math.random() < 0.30) {{
-            entidadesTramo.push({{x: inicioX + 1000 + Math.random() * (len - 1200), tipo: 'fabada', activo: true, w: 35, h: 35}});
+            entidadesSec.push({{x: inicioX + 800 + Math.random() * (len - 1000), tipo: 'fabada', activo: true, w: 35, h: 35}});
         }}
 
         return {{
             x1: inicioX, y1: inicioY,
             x2: inicioX + len, y2: yFinal,
             angle: anguloRad,
-            topY: yFinal - 100,
-            bottomY: yFinal + 100,
+            topY: yFinal - 110,
+            bottomY: yFinal + 110,
             pregunta: preg.texto,
             correcta: preg.correcta,
             topSign: topSign,
@@ -224,16 +224,17 @@ html_juego = f'''
             tieneTurbo: tieneTurbo,
             turboStart: inicioX + len * 0.4,
             turboEnd: inicioX + len * 0.4 + 400,
-            entidades: entidadesTramo
+            entidades: entidadesSec,
+            bifurcacionProcesada: false
         }};
     }}
 
     function inicializarMundo() {{
-        tramos = [];
-        let primerTramo = crearTramo(0, 300);
-        tramos.push(primerTramo);
-        let segundoTramo = crearTramo(primerTramo.x2, primerTramo.y2);
-        tramos.push(segundoTramo);
+        secciones = [];
+        let sec1 = crearSeccion(0, 300);
+        secciones.push(sec1);
+        let sec2 = crearSeccion(sec1.x2, sec1.y2);
+        secciones.push(sec2);
     }}
 
     function iniciarJuego() {{
@@ -263,7 +264,7 @@ html_juego = f'''
             dino.enAire = true; 
             dino.saltosRealizados = 1;
         }} else if (dino.saltosRealizados === 1) {{
-            dino.vy = -7;
+            dino.vy = -7; // Doble salto pequeño
             dino.saltosRealizados = 2;
         }}
     }}
@@ -305,9 +306,9 @@ html_juego = f'''
         
         let velTotal = baseVelocidad + (nivel * 0.4) + (difDinamica * 0.2);
         
-        let tramoActual = tramos.find(t => dino.x >= t.x1 && dino.x <= t.x2) || tramos[0];
+        let secActual = secciones.find(s => dino.x >= s.x1 && dino.x <= s.x2) || secciones[0];
 
-        if(tramoActual.tieneTurbo && dino.x > tramoActual.turboStart && dino.x < tramoActual.turboEnd && !dino.propulsado) {{
+        if(secActual.tieneTurbo && dino.x > secActual.turboStart && dino.x < secActual.turboEnd && !dino.propulsado) {{
             velTotal *= 1.8;
         }}
         
@@ -319,14 +320,48 @@ html_juego = f'''
 
         dino.x += velTotal;
 
-        let ySuelo = tramoActual.y1 + Math.tan(tramoActual.angle) * (dino.x - tramoActual.x1);
+        // Si estamos llegando al final de la sección actual, evaluamos la bifurcación
+        if (dino.x >= secActual.x2 - 10 && !secActual.bifurcacionProcesada) {{
+            secActual.bifurcacionProcesada = true;
+            
+            let caminoElegidoY, signoElegido;
+            if(dino.propulsado) {{
+                caminoElegidoY = (secActual.correcta === secActual.topSign) ? secActual.topY : secActual.bottomY;
+                signoElegido = secActual.correcta;
+            }} else {{
+                let mediaY = (secActual.topY + secActual.bottomY) / 2;
+                let vaArriba = dino.y < mediaY;
+                caminoElegidoY = vaArriba ? secActual.topY : secActual.bottomY;
+                signoElegido = vaArriba ? secActual.topSign : secActual.bottomSign;
+            }}
+
+            dino.y = caminoElegidoY - dino.h;
+            dino.enAire = false; dino.vy = 0; dino.saltosRealizados = 0;
+
+            if (signoElegido === secActual.correcta) {{
+                difDinamica = Math.max(0, difDinamica - 0.4);
+            }} else {{
+                difDinamica += 0.7;
+            }}
+
+            cuestasCompletadas++;
+            if (cuestasCompletadas % 10 === 0) nivel++;
+            actualizarUI();
+            
+            // Generar la siguiente sección conectada de manera dinámica
+            let nuevaSec = crearSeccion(secActual.x2, caminoElegidoY);
+            secciones.push(nuevaSec);
+        }}
+
+        // Física estándar dentro del tramo
+        let ySuelo = secActual.y1 + Math.tan(secActual.angle) * (dino.x - secActual.x1);
         
         if (!dino.enAire) {{
             dino.y = ySuelo - dino.h;
         }} else {{
             dino.y += dino.vy;
             dino.vy += 0.6;
-            if (dino.y + dino.h >= ySuelo && dino.vy > 0) {{
+            if (dino.y + dino.h >= ySuelo && dino.vy > 0 && dino.x < secActual.x2 - 20) {{
                 dino.y = ySuelo - dino.h;
                 dino.enAire = false;
                 dino.saltosRealizados = 0;
@@ -334,20 +369,14 @@ html_juego = f'''
             }}
         }}
 
-        if (dino.x > tramoActual.x2 - 500) {{
-            if (tramos.length < 3) {{
-                let ultimo = tramos[tramos.length - 1];
-                let nuevo = crearTramo(ultimo.x2, ultimo.y2);
-                tramos.push(nuevo);
-            }}
+        // Limpiar tramos antiguos
+        if (secciones.length > 3) {{
+            secciones.shift();
         }}
 
-        if (tramos.length > 3) {{
-            tramos.shift();
-        }}
-
-        tramos.forEach(t => {{
-            t.entidades.forEach(e => {{
+        // Colisiones con entidades
+        secciones.forEach(s => {{
+            s.entidades.forEach(e => {{
                 if(!e.activo) return;
                 
                 let eVel = 0;
@@ -355,7 +384,7 @@ html_juego = f'''
                 if (e.tipo === 'obs_rapido') eVel = -(velTotal + difDinamica);
                 e.x += eVel;
                 
-                e.y = t.y1 + Math.tan(t.angle) * (e.x - t.x1) - e.h;
+                e.y = s.y1 + Math.tan(s.angle) * (e.x - s.x1) - e.h;
 
                 let cajaDino = {{x: dino.x, y: dino.y, w: dino.w, h: dino.h}};
                 let cajaE = {{x: e.x, y: e.y, w: e.w, h: e.h}};
@@ -380,6 +409,7 @@ html_juego = f'''
             }});
         }});
 
+        // Cámara vertical fluida
         let targetCamY = canvas.height * 0.6 - dino.y;
         cameraY += (targetCamY - cameraY) * 0.1;
 
@@ -398,30 +428,45 @@ html_juego = f'''
         ctx.save();
         ctx.translate(200 - dino.x, cameraY);
 
-        tramos.forEach(t => {{
+        secciones.forEach(s => {{
+            // Cuesta principal
             ctx.lineWidth = 14;
             ctx.strokeStyle = '#27ae60';
             ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.moveTo(t.x1, t.y1);
-            ctx.lineTo(t.x2, t.y2);
+            ctx.moveTo(s.x1, s.y1);
+            ctx.lineTo(s.x2, s.y2);
             ctx.stroke();
 
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
-            ctx.fillRect(t.x1 + 300, t.y1 - 220, 260, 45);
-            ctx.fillStyle = "#f1c40f";
-            ctx.font = "bold 26px Arial";
-            ctx.fillText(t.pregunta, t.x1 + 315, t.y1 - 188);
+            // Bifurcación superior e inferior al final de la sección
+            ctx.strokeStyle = '#2980b9'; 
+            ctx.beginPath(); ctx.moveTo(s.x2, s.topY); ctx.lineTo(s.x2 + 2500, s.topY + Math.tan(s.angle)*2500); ctx.stroke();
+            
+            ctx.strokeStyle = '#c0392b'; 
+            ctx.beginPath(); ctx.moveTo(s.x2, s.bottomY); ctx.lineTo(s.x2 + 2500, s.bottomY + Math.tan(s.angle)*2500); ctx.stroke();
 
-            if (t.tieneTurbo) {{
+            // Letreros de opciones SI / NO
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 26px Arial";
+            ctx.fillText(s.topSign, s.x2 + 40, s.topY - 20);
+            ctx.fillText(s.bottomSign, s.x2 + 40, s.bottomY - 20);
+
+            // Pregunta matemática flotante
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillRect(s.x2 - 240, s.y2 - 230, 280, 45);
+            ctx.fillStyle = "#f1c40f";
+            ctx.font = "bold 28px Arial";
+            ctx.fillText(s.pregunta, s.x2 - 225, s.y2 - 198);
+
+            if (s.tieneTurbo) {{
                 ctx.fillStyle = "#e74c3c";
-                ctx.fillRect(t.turboStart - 200, t.y1 + Math.tan(t.angle)*(t.turboStart - 200 - t.x1) - 80, 50, 50);
+                ctx.fillRect(s.turboStart - 200, s.y1 + Math.tan(s.angle)*(s.turboStart - 200 - s.x1) - 80, 50, 50);
                 ctx.fillStyle = "#fff";
                 ctx.font = "bold 35px Arial";
-                ctx.fillText("⚡", t.turboStart - 190, t.y1 + Math.tan(t.angle)*(t.turboStart - 200 - t.x1) - 42);
+                ctx.fillText("⚡", s.turboStart - 190, s.y1 + Math.tan(s.angle)*(s.turboStart - 200 - s.x1) - 42);
             }}
 
-            t.entidades.forEach(e => {{
+            s.entidades.forEach(e => {{
                 if(e.activo) dibujarSprite(ctx, e.tipo, e.x, e.y, e.w, e.h);
             }});
         }});
