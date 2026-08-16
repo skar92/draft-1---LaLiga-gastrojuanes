@@ -1,4 +1,3 @@
-
 import base64
 import os
 import streamlit as st
@@ -13,19 +12,16 @@ def obtener_imagen_base64(nombre_archivo, color_hex_fallback):
     folder = "img"
     ruta_especifica = os.path.join(folder, nombre_archivo)
     
-    # 1. Intenta cargar el archivo específico
     if os.path.exists(ruta_especifica):
         with open(ruta_especifica, "rb") as f:
             return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
             
-    # 2. Fallback: busca cualquier PNG en la carpeta 'img'
     if os.path.exists(folder):
         pngs = [f for f in os.listdir(folder) if f.endswith(".png")]
         if pngs:
             with open(os.path.join(folder, pngs[0]), "rb") as f:
                 return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
                 
-    # 3. Fallback final: devuelve un indicador de color si no hay imágenes
     return f"COLOR:{color_hex_fallback}"
 
 imagenes = {
@@ -50,10 +46,10 @@ html_juego = f'''
     body {{ margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #222; }}
     #game-container {{ position: relative; width: 100%; max-width: 900px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }}
     canvas {{ display: block; width: 100%; height: 500px; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); }}
-    #ui-layer {{ position: absolute; top: 10px; left: 15px; color: #333; font-weight: bold; font-size: 18px; pointer-events: none; text-shadow: 1px 1px 2px white; }}
-    #game-over {{ display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 30px; border-radius: 15px; text-align: center; border: 3px solid #f1c40f; }}
+    #ui-layer {{ position: absolute; top: 10px; left: 15px; color: #333; font-weight: bold; font-size: 18px; pointer-events: none; text-shadow: 1px 1px 2px white; z-index: 10; }}
+    #game-over {{ display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 30px; border-radius: 15px; text-align: center; border: 3px solid #f1c40f; z-index: 20; }}
     .btn {{ background: #f1c40f; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; font-size: 16px; }}
-    #controls {{ position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }}
+    #controls {{ position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; z-index: 10; }}
     .ctrl-btn {{ pointer-events: auto; background: rgba(255,255,255,0.7); border: 2px solid #333; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; }}
     #btn-pedo {{ border-radius: 10px; width: auto; padding: 0 20px; background: rgba(211, 84, 0, 0.8); color: white; border-color: #e67e22; }}
 </style>
@@ -82,7 +78,6 @@ html_juego = f'''
 </div>
 
 <script>
-    // Configuración Canvas e Imágenes
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     canvas.width = 900;
@@ -104,7 +99,7 @@ html_juego = f'''
             img.src = IMG_DATA[key];
             imagenesCargadas[key] = img;
         }} else {{
-            imagenesCargadas[key] = IMG_DATA[key].split(":")[1]; // Guarda el HEX
+            imagenesCargadas[key] = IMG_DATA[key].split(":")[1];
         }}
     }}
 
@@ -126,12 +121,12 @@ html_juego = f'''
     let cameraY = 0;
     let frameId;
     
-    // Progresión
+    // Progresión Suavizada
     let cuestasCompletadas = 0;
     let nivel = 1;
     let difDinamica = 0; 
-    let baseVelocidad = 6;
-    let fAcu = 0; // Fabadas
+    let baseVelocidad = 3.5; // MUCHO MÁS FÁCIL AL INICIO
+    let fAcu = 0; 
     let pedosAcu = 0;
     let sidras = 0;
 
@@ -147,7 +142,6 @@ html_juego = f'''
     let slope = {{}};
     let entidades = [];
 
-    // Motor de Preguntas
     function generarPregunta(nivelReal) {{
         let ops = ['+', '-'];
         if (nivelReal > 2) ops.push('*');
@@ -171,9 +165,14 @@ html_juego = f'''
 
     function generarCuesta(inicioX, inicioY) {{
         let nv = Math.max(1, nivel + difDinamica);
-        let anguloDeg = (Math.random() * 70) - 35; // Rango -35 a +35
+        
+        // CUESTAS MENOS PRONUNCIADAS A MENOR DIFICULTAD
+        let maxAngleDeg = Math.min(5 + (nv * 3), 30); // Empieza en 8 grados, tope en 30
+        let anguloDeg = (Math.random() * maxAngleDeg * 2) - maxAngleDeg;
         let anguloRad = anguloDeg * Math.PI / 180;
-        let len = 1500 + Math.random() * 800;
+        
+        // CUESTAS MÁS LARGAS
+        let len = 2500 + Math.random() * 1500; 
         let yFinal = inicioY + Math.tan(anguloRad) * len;
         
         let preg = generarPregunta(nv);
@@ -181,13 +180,14 @@ html_juego = f'''
         
         let tieneTurbo = Math.random() < 0.35;
         
+        // HUECOS MÁS PEQUEÑOS Y SALTOS MÁS ASEQUIBLES
         slope = {{
             x1: inicioX, y1: inicioY,
             x2: inicioX + len, y2: yFinal,
             angle: anguloRad,
-            gapEnd: inicioX + len + 250,
-            topY: yFinal - 130,
-            bottomY: yFinal + 130,
+            gapEnd: inicioX + len + 150, // Hueco más corto (antes 250)
+            topY: yFinal - 100,          // Menos altura para llegar (antes -130)
+            bottomY: yFinal + 100,
             pregunta: preg.texto,
             correcta: preg.correcta,
             topSign: topSign,
@@ -197,24 +197,21 @@ html_juego = f'''
             turboEnd: inicioX + len * 0.4 + 400
         }};
         
-        // Generar Entidades
         entidades = [];
         let numObstaculos = Math.floor(nv * 1.5) + 1;
         for(let i=0; i<numObstaculos; i++) {{
-            let ox = slope.x1 + 600 + Math.random() * (len - 800);
+            let ox = slope.x1 + 800 + Math.random() * (len - 1000);
             let tipo = Math.random() < 0.5 ? 'obs_fijo' : (Math.random() < 0.5 ? 'obs_lento' : 'obs_rapido');
             entidades.push({{x: ox, tipo: tipo, activo: true, w: 40, h: 40}});
         }}
         
-        // Generar Sidras (Objetivo principal)
         let numSidras = 2 + Math.floor(Math.random() * 3);
         for(let i=0; i<numSidras; i++) {{
-            entidades.push({{x: slope.x1 + 300 + Math.random() * (len - 400), tipo: 'sidra', activo: true, w: 30, h: 30}});
+            entidades.push({{x: slope.x1 + 500 + Math.random() * (len - 600), tipo: 'sidra', activo: true, w: 30, h: 30}});
         }}
         
-        // Generar Fabadas (Frecuencia Fija ~ 30% por cuesta)
         if(Math.random() < 0.30) {{
-            entidades.push({{x: slope.x1 + 700 + Math.random() * (len - 900), tipo: 'fabada', activo: true, w: 35, h: 35}});
+            entidades.push({{x: slope.x1 + 1000 + Math.random() * (len - 1200), tipo: 'fabada', activo: true, w: 35, h: 35}});
         }}
     }}
 
@@ -238,10 +235,10 @@ html_juego = f'''
         }}
     }}
 
-    function salto() {{ if(!dino.enAire && !dino.propulsado) {{ dino.vy = -14; dino.enAire = true; }} }}
+    // SALTO MÁS FUERTE PARA LLEGAR FÁCIL ARRIBA
+    function salto() {{ if(!dino.enAire && !dino.propulsado) {{ dino.vy = -16; dino.enAire = true; }} }}
     function caidaRapida() {{ if(dino.enAire && !dino.propulsado) {{ dino.vy += 8; }} }}
 
-    // Controles Touch
     document.getElementById('btn-jump').addEventListener('touchstart', (e)=> {{ e.preventDefault(); salto(); }});
     document.getElementById('btn-jump').addEventListener('mousedown', salto);
     document.getElementById('btn-drop').addEventListener('touchstart', (e)=> {{ e.preventDefault(); caidaRapida(); }});
@@ -249,7 +246,6 @@ html_juego = f'''
     document.getElementById('btn-pedo').addEventListener('touchstart', (e)=> {{ e.preventDefault(); activarPropulsion(); }});
     document.getElementById('btn-pedo').addEventListener('mousedown', activarPropulsion);
 
-    // Controles Teclado
     document.addEventListener('keydown', (e) => {{
         if(e.code === 'ArrowUp') salto();
         if(e.code === 'ArrowDown') caidaRapida();
@@ -265,7 +261,6 @@ html_juego = f'''
     }}
 
     function procesarCruceBifurcacion() {{
-        // Determinar qué camino cogió comparando Y
         let errYTop = Math.abs(dino.y - slope.topY);
         let errYBot = Math.abs(dino.y - slope.bottomY);
         
@@ -276,7 +271,6 @@ html_juego = f'''
         dino.y = yTomado - dino.h;
         dino.enAire = false; dino.vy = 0;
 
-        // Penalización/Recompensa
         if (signTomado === slope.correcta) {{
             difDinamica = Math.max(0, difDinamica - 0.5);
         }} else {{
@@ -297,14 +291,13 @@ html_juego = f'''
     function loop() {{
         if(!juegoActivo) return;
         
-        let velTotal = baseVelocidad + (nivel * 0.5) + (difDinamica * 0.3);
+        // VELOCIDAD ESCALADA SUAVEMENTE
+        let velTotal = baseVelocidad + (nivel * 0.4) + (difDinamica * 0.2);
         
-        // Modificador Turbo de pista
         if(slope.tieneTurbo && dino.x > slope.turboStart && dino.x < slope.turboEnd && !dino.propulsado) {{
             velTotal *= 1.8;
         }}
         
-        // Propulsión extrema
         if(dino.propulsado) {{
             velTotal *= 3.5;
             dino.distPropulsion -= velTotal;
@@ -313,37 +306,32 @@ html_juego = f'''
 
         dino.x += velTotal;
 
-        // Físicas Y
         if (dino.x >= slope.x1 && dino.x < slope.x2) {{
             let ySuelo = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
             if (!dino.enAire) {{
                 dino.y = ySuelo - dino.h;
             }} else {{
                 dino.y += dino.vy;
-                dino.vy += 0.8; // Gravedad
+                dino.vy += 0.7; // Gravedad ligeramente más baja para saltos flotantes
                 if (dino.y + dino.h >= ySuelo && dino.vy > 0) {{
                     dino.y = ySuelo - dino.h;
                     dino.enAire = false; dino.vy = 0;
                 }}
             }}
         }} else if (dino.x >= slope.x2 && dino.x < slope.gapEnd) {{
-            // Zona de Bifurcación (Vacío)
             dino.enAire = true;
-            
             if(dino.propulsado) {{
-                // Auto-piloto invencible
                 let targetY = (slope.correcta === slope.topSign) ? slope.topY : slope.bottomY;
                 dino.y += ((targetY - dino.h) - dino.y) * 0.2;
                 dino.vy = 0;
             }} else {{
                 dino.y += dino.vy;
-                dino.vy += 0.8;
+                dino.vy += 0.7;
             }}
         }} else if (dino.x >= slope.gapEnd) {{
             procesarCruceBifurcacion();
         }}
 
-        // Actualizar Entidades (Obstáculos y Premios)
         entidades.forEach(e => {{
             if(!e.activo) return;
             
@@ -354,7 +342,6 @@ html_juego = f'''
             
             e.y = slope.y1 + Math.tan(slope.angle) * (e.x - slope.x1) - e.h;
 
-            // Recolección y Choques
             let cajaDino = {{x: dino.x, y: dino.y, w: dino.w, h: dino.h}};
             let cajaE = {{x: e.x, y: e.y, w: e.w, h: e.h}};
             
@@ -367,9 +354,8 @@ html_juego = f'''
                     actualizarUI();
                 }} else if (e.tipo.startsWith('obs_')) {{
                     if (dino.propulsado) {{
-                        e.activo = false; // Destruye el obstáculo
+                        e.activo = false;
                     }} else {{
-                        // GAME OVER
                         juegoActivo = false;
                         document.getElementById('final-sidras').innerText = sidras;
                         document.getElementById('game-over').style.display = 'block';
@@ -378,9 +364,18 @@ html_juego = f'''
             }}
         }});
 
-        // Cámara Lerp Y
-        let targetCamY = canvas.height * 0.6 - dino.y;
-        cameraY += (targetCamY - cameraY) * 0.1;
+        // CÁMARA ESTABILIZADA: SE FIJA EN EL SUELO, NO EN LOS SALTOS DEL DINO
+        let refY;
+        if (dino.x < slope.x2) {{
+            // Si está en la cuesta, sigue la inclinación de la cuesta (estable)
+            refY = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
+        }} else {{
+            // En la zona de salto/bifurcación, promedia hacia el siguiente camino
+            refY = (slope.topY + slope.bottomY) / 2; 
+        }}
+        
+        let targetCamY = canvas.height * 0.6 - refY;
+        cameraY += (targetCamY - cameraY) * 0.08; // Transición más suave
 
         dibujarEscena();
         if(juegoActivo) frameId = requestAnimationFrame(loop);
@@ -389,16 +384,14 @@ html_juego = f'''
     function dibujarEscena() {{
         ctx.save();
         ctx.setTransform(1,0,0,1,0,0);
-        // Fondo que cambia si hay turbo o pedo
         if(dino.propulsado) ctx.fillStyle = "#ffb142";
         else ctx.fillStyle = "#87CEEB";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
 
         ctx.save();
-        ctx.translate(200 - dino.x, cameraY); // Dino centrado en X=200
+        ctx.translate(200 - dino.x, cameraY);
 
-        // Dibujar Cuesta Actual
         ctx.lineWidth = 14;
         ctx.strokeStyle = '#27ae60';
         ctx.lineCap = 'round';
@@ -407,27 +400,24 @@ html_juego = f'''
         ctx.lineTo(slope.x2, slope.y2);
         ctx.stroke();
 
-        // Dibujar Bifurcaciones
-        ctx.strokeStyle = '#2980b9'; // Arriba
+        ctx.strokeStyle = '#2980b9'; 
         ctx.beginPath(); ctx.moveTo(slope.gapEnd, slope.topY); ctx.lineTo(slope.gapEnd + 2500, slope.topY + Math.tan(slope.angle)*2500); ctx.stroke();
         
-        ctx.strokeStyle = '#c0392b'; // Abajo
+        ctx.strokeStyle = '#c0392b'; 
         ctx.beginPath(); ctx.moveTo(slope.gapEnd, slope.bottomY); ctx.lineTo(slope.gapEnd + 2500, slope.bottomY + Math.tan(slope.angle)*2500); ctx.stroke();
 
-        // Carteles Bifurcación
         ctx.fillStyle = "#fff";
         ctx.font = "bold 28px Arial";
         ctx.fillText(slope.topSign, slope.gapEnd + 40, slope.topY - 25);
         ctx.fillText(slope.bottomSign, slope.gapEnd + 40, slope.bottomY - 25);
 
-        // Pregunta Dicotómica Flotante
+        // PREGUNTA REPOSICIONADA PARA MÁXIMA VISIBILIDAD
         ctx.fillStyle = "rgba(0,0,0,0.7)";
-        ctx.fillRect(slope.x2 - 120, slope.y2 - 250, 300, 50);
+        ctx.fillRect(slope.x2 - 150, slope.y2 - 280, 300, 50);
         ctx.fillStyle = "#f1c40f";
         ctx.font = "bold 32px Arial";
-        ctx.fillText(slope.pregunta, slope.x2 - 100, slope.y2 - 215);
+        ctx.fillText(slope.pregunta, slope.x2 - 130, slope.y2 - 245);
 
-        // Señal de Aviso de Turbo
         if (slope.tieneTurbo) {{
             ctx.fillStyle = "#e74c3c";
             ctx.fillRect(slope.turboStart - 400, slope.y1 + Math.tan(slope.angle)*(slope.turboStart - 400 - slope.x1) - 100, 60, 60);
@@ -435,7 +425,6 @@ html_juego = f'''
             ctx.font = "bold 40px Arial";
             ctx.fillText("⚡", slope.turboStart - 390, slope.y1 + Math.tan(slope.angle)*(slope.turboStart - 400 - slope.x1) - 55);
             
-            // Suelo rojo en tramo turbo
             ctx.lineWidth = 14;
             ctx.strokeStyle = '#e74c3c';
             ctx.beginPath();
@@ -444,15 +433,12 @@ html_juego = f'''
             ctx.stroke();
         }}
 
-        // Dibujar Entidades
         entidades.forEach(e => {{
             if(e.activo) dibujarSprite(ctx, e.tipo, e.x, e.y, e.w, e.h);
         }});
 
-        // Dibujar DinoJuan
         ctx.save();
         if(dino.propulsado) {{
-            // Efecto turbo verde del pedo
             ctx.fillStyle = "rgba(46, 204, 113, 0.5)";
             ctx.fillRect(dino.x - 60, dino.y, 80, dino.h);
         }}
@@ -463,8 +449,6 @@ html_juego = f'''
     }}
 
     window.reiniciarJuego = function() {{ iniciarJuego(); }};
-
-    // Arranque
     iniciarJuego();
 </script>
 </body>
