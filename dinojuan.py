@@ -4,7 +4,10 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 
-st.set_page_config(page_title="DinoJuan - Minijuego", layout="wide")
+st.set_page_config(
+    page_title="DinoJuan - Minijuego",
+    layout="wide"
+)
 
 
 # ============================================================
@@ -13,48 +16,88 @@ st.set_page_config(page_title="DinoJuan - Minijuego", layout="wide")
 
 def obtener_imagen_base64(nombre_archivo, color_hex_fallback):
     folder = "img"
-    ruta_especifica = os.path.join(folder, nombre_archivo)
+    ruta = os.path.join(folder, nombre_archivo)
 
-    if os.path.exists(ruta_especifica):
-        with open(ruta_especifica, "rb") as f:
-            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    if os.path.exists(ruta):
+        with open(ruta, "rb") as f:
+            return (
+                "data:image/png;base64,"
+                + base64.b64encode(f.read()).decode()
+            )
 
     if os.path.exists(folder):
-        pngs = [f for f in os.listdir(folder) if f.endswith(".png")]
+        pngs = [
+            f for f in os.listdir(folder)
+            if f.endswith(".png")
+        ]
+
         if pngs:
             with open(os.path.join(folder, pngs[0]), "rb") as f:
-                return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+                return (
+                    "data:image/png;base64,"
+                    + base64.b64encode(f.read()).decode()
+                )
 
     return f"COLOR:{color_hex_fallback}"
 
 
 imagenes = {
-    "dino": obtener_imagen_base64("oviedo_dino.png", "#2ecc71"),
-    "obs_fijo": obtener_imagen_base64("ubres_dino.png", "#e74c3c"),
-    "obs_lento": obtener_imagen_base64("carne_dino.png", "#e67e22"),
-    "obs_rapido": obtener_imagen_base64("mirete_dino.png", "#8e44ad"),
-    "obs_extra": obtener_imagen_base64("pwc_dino.png", "#c0392b"),
-    "fabada": obtener_imagen_base64("fabada.png", "#d35400"),
-    "sidra": obtener_imagen_base64("sidra.png", "#f1c40f")
+    "dino": obtener_imagen_base64(
+        "oviedo_dino.png",
+        "#2ecc71"
+    ),
+
+    "obs_fijo": obtener_imagen_base64(
+        "ubres_dino.png",
+        "#e74c3c"
+    ),
+
+    "obs_lento": obtener_imagen_base64(
+        "carne_dino.png",
+        "#e67e22"
+    ),
+
+    "obs_rapido": obtener_imagen_base64(
+        "mirete_dino.png",
+        "#8e44ad"
+    ),
+
+    "obs_extra": obtener_imagen_base64(
+        "pwc_dino.png",
+        "#c0392b"
+    ),
+
+    "fabada": obtener_imagen_base64(
+        "fabada.png",
+        "#d35400"
+    ),
+
+    "sidra": obtener_imagen_base64(
+        "sidra.png",
+        "#f1c40f"
+    )
 }
 
 
 # ============================================================
-# HTML / CSS / JAVASCRIPT
+# JUEGO
 # ============================================================
 
-html_juego = """
+html_juego = f"""
 <!DOCTYPE html>
 <html>
 
 <head>
+
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0,
-               maximum-scale=1.0, user-scalable=no">
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
 <style>
 
-body {
+body {{
     margin: 0;
     padding: 0;
     overflow: hidden;
@@ -62,25 +105,30 @@ body {
     background: #222;
     -webkit-user-select: none;
     user-select: none;
-}
+}}
 
-#game-container {
+#game-container {{
     position: relative;
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-}
+}}
 
-canvas {
+canvas {{
     display: block;
     width: 100%;
     height: 500px;
-    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+    background:
+        linear-gradient(
+            to bottom,
+            #87CEEB,
+            #E0F6FF
+        );
     cursor: pointer;
-}
+}}
 
-#ui-layer {
+#ui-layer {{
     position: absolute;
     top: 10px;
     left: 15px;
@@ -90,24 +138,24 @@ canvas {
     pointer-events: none;
     text-shadow: 1px 1px 2px white;
     z-index: 10;
-}
+}}
 
-#game-over {
+#game-over {{
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.88);
     color: white;
     padding: 30px;
     border-radius: 15px;
     text-align: center;
     border: 3px solid #f1c40f;
     z-index: 20;
-}
+}}
 
-.btn {
+.btn {{
     background: #f1c40f;
     color: #000;
     font-weight: bold;
@@ -117,9 +165,9 @@ canvas {
     cursor: pointer;
     margin-top: 15px;
     font-size: 16px;
-}
+}}
 
-#controls {
+#controls {{
     position: absolute;
     bottom: 20px;
     width: 100%;
@@ -127,9 +175,9 @@ canvas {
     justify-content: space-around;
     pointer-events: none;
     z-index: 10;
-}
+}}
 
-.ctrl-btn {
+.ctrl-btn {{
     pointer-events: auto;
     background: rgba(255,255,255,0.8);
     border: 2px solid #333;
@@ -139,15 +187,16 @@ canvas {
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-}
+}}
 
-#btn-pedo {
+#btn-pedo {{
     background: rgba(211, 84, 0, 0.9);
     color: white;
     border-color: #e67e22;
-}
+}}
 
 </style>
+
 </head>
 
 
@@ -155,61 +204,96 @@ canvas {
 
 <div id="game-container">
 
-    <div id="ui-layer">
-        <div>
-            🍏 Sidras: <span id="sidras">0</span>
-            |
-            🥫 Fabadas: <span id="fabadas">0</span>/3
-            ->
-            💨 Pedos: <span id="pedos">0</span>
-        </div>
+<div id="ui-layer">
 
-        <div style="font-size: 14px; margin-top: 5px; color: #555;">
-            🏆 Nivel: <span id="nivel">1</span>
-            |
-            📈 Dificultad Extra: <span id="dif">0.0</span>
-        </div>
-    </div>
+<div>
+🍏 Sidras:
+<span id="sidras">0</span>
+
+|
+
+🥫 Fabadas:
+<span id="fabadas">0</span>/3
+
+→
+
+💨 Pedos:
+<span id="pedos">0</span>
+</div>
+
+<div style="font-size:14px;margin-top:5px;color:#555;">
+
+🏆 Nivel:
+<span id="nivel">1</span>
+
+|
+
+📈 Dificultad Extra:
+<span id="dif">0.0</span>
+
+</div>
+
+</div>
 
 
-    <canvas id="gameCanvas"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 
-    <div id="controls">
+<div id="controls">
 
-        <div class="ctrl-btn" id="btn-drop">
-            ⬇️ CAER / ABAJO
-        </div>
+<div
+class="ctrl-btn"
+id="btn-drop">
 
-        <div class="ctrl-btn" id="btn-pedo">
-            💨 SOLTAR PEDO
-        </div>
+⬇️ CAER / ABAJO
 
-    </div>
+</div>
 
 
-    <div id="game-over">
+<div
+class="ctrl-btn"
+id="btn-pedo">
 
-        <h1 style="margin-top:0;">
-            💥 GAME OVER
-        </h1>
+💨 SOLTAR PEDO
 
-        <h2>
-            🍏 Sidras Totales:
-            <span id="final-sidras" style="color:#f1c40f;">
-                0
-            </span>
-        </h2>
+</div>
 
-        <p>
-            Has tropezado con un obstáculo.
-        </p>
+</div>
 
-        <button class="btn" onclick="reiniciarJuego()">
-            Volver a Jugar
-        </button>
 
-    </div>
+<div id="game-over">
+
+<h1 style="margin-top:0;">
+💥 GAME OVER
+</h1>
+
+<h2>
+
+🍏 Sidras Totales:
+
+<span
+id="final-sidras"
+style="color:#f1c40f;">
+
+0
+
+</span>
+
+</h2>
+
+<p>
+Has tropezado con un obstáculo.
+</p>
+
+<button
+class="btn"
+onclick="reiniciarJuego()">
+
+Volver a Jugar
+
+</button>
+
+</div>
 
 </div>
 
@@ -221,8 +305,11 @@ canvas {
 // CANVAS
 // ============================================================
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas =
+    document.getElementById("gameCanvas");
+
+const ctx =
+    canvas.getContext("2d");
 
 canvas.width = 900;
 canvas.height = 500;
@@ -232,104 +319,178 @@ canvas.height = 500;
 // IMÁGENES
 // ============================================================
 
-const IMG_DATA = {
-    dino: "__DINO__",
-    obs_fijo: "__OBS_FIJO__",
-    obs_lento: "__OBS_LENTO__",
-    obs_rapido: "__OBS_RAPIDO__",
-    fabada: "__FABADA__",
-    sidra: "__SIDRA__"
-};
+const IMG_DATA = {{
+
+    dino: "{imagenes['dino']}",
+
+    obs_fijo: "{imagenes['obs_fijo']}",
+
+    obs_lento: "{imagenes['obs_lento']}",
+
+    obs_rapido: "{imagenes['obs_rapido']}",
+
+    obs_extra: "{imagenes['obs_extra']}",
+
+    fabada: "{imagenes['fabada']}",
+
+    sidra: "{imagenes['sidra']}"
+}};
 
 
-const imagenesCargadas = {};
+const imagenesCargadas = {{}};
 
-for (let key in IMG_DATA) {
 
-    if (!IMG_DATA[key].startsWith("COLOR:")) {
+for (
+    let key in IMG_DATA
+) {{
+
+    if (
+        !IMG_DATA[key].startsWith("COLOR:")
+    ) {{
 
         let img = new Image();
+
         img.src = IMG_DATA[key];
 
         imagenesCargadas[key] = img;
 
-    } else {
+    }} else {{
 
         imagenesCargadas[key] =
             IMG_DATA[key].split(":")[1];
+    }}
+}}
 
-    }
-}
 
+function dibujarSprite(
+    ctx,
+    key,
+    x,
+    y,
+    w,
+    h
+) {{
 
-function dibujarSprite(ctx, key, x, y, w, h) {
+    let obj =
+        imagenesCargadas[key];
 
-    let obj = imagenesCargadas[key];
-
-    if (typeof obj === "string") {
+    if (
+        typeof obj === "string"
+    ) {{
 
         ctx.fillStyle = obj;
-        ctx.fillRect(x, y, w, h);
 
-    } else if (obj && obj.complete && obj.naturalWidth > 0) {
+        ctx.fillRect(
+            x,
+            y,
+            w,
+            h
+        );
 
-        ctx.drawImage(obj, x, y, w, h);
+    }} else if (
+        obj &&
+        obj.complete &&
+        obj.naturalWidth > 0
+    ) {{
 
-    } else {
+        ctx.drawImage(
+            obj,
+            x,
+            y,
+            w,
+            h
+        );
+
+    }} else {{
 
         ctx.fillStyle = "#000";
-        ctx.fillRect(x, y, w, h);
-    }
+
+        ctx.fillRect(
+            x,
+            y,
+            w,
+            h
+        );
+    }}
 }
 
 
 // ============================================================
-// VARIABLES DEL JUEGO
+// CONFIGURACIÓN FÍSICA
+// ============================================================
+
+const GRAVEDAD = 0.65;
+
+const FUERZA_SALTO = -15;
+
+const ALTURA_MAX_SALTO =
+    (
+        FUERZA_SALTO *
+        FUERZA_SALTO
+    ) /
+    (
+        2 *
+        GRAVEDAD
+    );
+
+
+// Distancia máxima horizontal aproximada
+// de un salto normal.
+
+const TIEMPO_SALTO =
+    (
+        -2 *
+        FUERZA_SALTO
+    ) /
+    GRAVEDAD;
+
+const DISTANCIA_SALTO =
+    TIEMPO_SALTO *
+    4.5;
+
+
+// ============================================================
+// VARIABLES
 // ============================================================
 
 let juegoActivo = true;
 
+let frameId = null;
+
 let cameraY = 0;
-let frameId;
+
+let nivel = 1;
+
+let difDinamica = 0;
 
 let cuestasCompletadas = 0;
-let nivel = 1;
-let difDinamica = 0;
 
 let baseVelocidad = 3.5;
 
 let fAcu = 0;
+
 let pedosAcu = 0;
+
 let sidras = 0;
 
 
 const CONST_FABADA = 3;
+
 const DISTANCIA_PEDO = 2500;
-
-
-// ============================================================
-// FÍSICA
-// ============================================================
-
-const GRAVEDAD = 0.65;
-const FUERZA_SALTO = -15;
-
-// Altura aproximada máxima que alcanza un salto.
-// Se utiliza también para decidir si el camino superior
-// es accesible desde el inferior.
-const ALTURA_MAX_SALTO =
-    (FUERZA_SALTO * FUERZA_SALTO) /
-    (2 * GRAVEDAD);
 
 
 // ============================================================
 // DINO
 // ============================================================
 
-let dino = {
+let dino = {{
+
     x: 0,
-    y: 200,
+
+    y: 260,
+
     w: 40,
+
     h: 40,
 
     vy: 0,
@@ -337,358 +498,616 @@ let dino = {
     enAire: false,
 
     propulsado: false,
+
     distPropulsion: 0,
 
-    // "main", "top" o "bottom"
-    ruta: "main"
-};
+    roadId: null,
+
+    // Para saber de qué bifurcación procede
+    parentNodeId: null
+}};
 
 
 // ============================================================
-// ESTRUCTURA DE LA CUESTA
+// ÁRBOL DE CAMINOS
+// ============================================================
+//
+// Cada "road" es un tramo infinito en el sentido lógico:
+//
+//     road
+//       |
+//       +---- top road
+//       |
+//       +---- bottom road
+//
+// Los hijos ya existen antes de que el jugador llegue
+// a la bifurcación.
+//
+// Por tanto nunca aparece un camino de repente.
 // ============================================================
 
-let slope = {};
+let roads = [];
+
+let nodes = [];
+
+let nextRoadId = 1;
+
+let nextNodeId = 1;
+
+
+// ============================================================
+// ENTIDADES
+// ============================================================
 
 let entidades = [];
+
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+
+function clamp(
+    valor,
+    minimo,
+    maximo
+) {{
+
+    return Math.max(
+        minimo,
+        Math.min(
+            maximo,
+            valor
+        )
+    );
+}}
+
+
+function distanciaVertical(
+    y1,
+    y2
+) {{
+
+    return Math.abs(
+        y1 - y2
+    );
+}}
 
 
 // ============================================================
 // PREGUNTAS
 // ============================================================
 
-function generarPregunta(nivelReal) {
+function generarPregunta(
+    nivelReal
+) {{
 
-    let ops = ["-", "+"];
+    let ops = ["+", "-"];
 
-    if (nivelReal > 2)
+    if (
+        nivelReal > 2
+    )
         ops.push("*");
 
-    if (nivelReal > 4)
+    if (
+        nivelReal > 4
+    )
         ops.push("/");
 
 
     let op =
-        ops[Math.floor(Math.random() * ops.length)];
+        ops[
+            Math.floor(
+                Math.random() *
+                ops.length
+            )
+        ];
 
 
     let b =
-        Math.floor(Math.random() * 8 * nivelReal) + 1;
+        Math.floor(
+            Math.random() *
+            8 *
+            nivelReal
+        ) + 1;
+
 
     let c =
-        Math.floor(Math.random() * 8 * nivelReal) + 1;
+        Math.floor(
+            Math.random() *
+            8 *
+            nivelReal
+        ) + 1;
 
 
-    let resReal = 0;
+    let resultado = 0;
 
 
     if (op === "+")
-        resReal = b + c;
+        resultado = b + c;
 
     if (op === "-")
-        resReal = b - c;
+        resultado = b - c;
 
     if (op === "*")
-        resReal = b * c;
+        resultado = b * c;
 
-    if (op === "/") {
+    if (op === "/") {{
 
-        resReal = b;
+        resultado = b;
+
         b = b * c;
-    }
+    }}
 
 
-    let esCorrecta =
+    let correcta =
         Math.random() > 0.5;
 
 
-    let resMostrado =
-        esCorrecta
-            ? resReal
-            : resReal +
-              (Math.random() > 0.5 ? 1 : -1) *
-              (Math.floor(Math.random() * 4) + 1);
+    let mostrado =
+        correcta
+            ? resultado
+            : resultado +
+              (
+                Math.random() > 0.5
+                    ? 1
+                    : -1
+              ) *
+              (
+                Math.floor(
+                    Math.random() * 4
+                ) + 1
+              );
 
 
-    return {
+    return {{
+
         texto:
-            b + " " + op + " " + c +
-            " = " + resMostrado,
+            b +
+            " " +
+            op +
+            " " +
+            c +
+            " = " +
+            mostrado,
 
         correcta:
-            esCorrecta ? "SI" : "NO"
-    };
-}
+            correcta
+                ? "SI"
+                : "NO"
+    }};
+}}
 
 
 // ============================================================
-// GENERACIÓN DE UNA NUEVA CUESTA
+// CREAR ROAD
 // ============================================================
 
-function generarCuesta(inicioX, inicioY) {
+function crearRoad(
+    x1,
+    y1,
+    x2,
+    y2,
+    parentNodeId,
+    tipo,
+    nivelRoad
+) {{
 
-    let nv =
-        Math.max(1, nivel + difDinamica);
-
-
-    // --------------------------------------------------------
-    // CAMINO PRINCIPAL
-    // --------------------------------------------------------
-
-    const mainLen =
-        1450 + Math.random() * 450;
-
-
-    const maxAngleDeg =
-        Math.min(
-            4 + nv * 1.8,
-            18
+    const pendiente =
+        (
+            y2 - y1
+        ) /
+        (
+            x2 - x1
         );
 
 
-    const anguloPrincipalDeg =
-        (Math.random() * maxAngleDeg * 2)
-        - maxAngleDeg;
+    const road = {{
+
+        id: nextRoadId++,
+
+        x1: x1,
+
+        y1: y1,
+
+        x2: x2,
+
+        y2: y2,
+
+        pendiente: pendiente,
+
+        angle:
+            Math.atan(
+                pendiente
+            ),
+
+        parentNodeId:
+            parentNodeId,
+
+        tipo:
+            tipo,
+
+        nivel:
+            nivelRoad,
+
+        childNodeId:
+            null,
+
+        activo: true
+    }};
 
 
-    const anguloPrincipal =
-        anguloPrincipalDeg *
-        Math.PI / 180;
+    roads.push(road);
+
+    return road;
+}}
 
 
-    const splitX =
-        inicioX + mainLen;
+// ============================================================
+// Y DE ROAD
+// ============================================================
+
+function obtenerYEnRoad(
+    road,
+    x
+) {{
+
+    if (!road)
+        return 0;
 
 
-    const splitY =
-        inicioY +
-        Math.tan(anguloPrincipal) *
-        mainLen;
+    return (
+        road.y1 +
+        road.pendiente *
+        (
+            x - road.x1
+        )
+    );
+}}
+
+
+// ============================================================
+// CREAR BIFURCACIÓN
+// ============================================================
+//
+// La bifurcación NO es un punto en el que los caminos
+// desaparecen.
+//
+// Los dos hijos empiezan en el mismo punto de decisión
+// y se separan progresivamente.
+//
+// A partir de ahí cada uno tiene su propia siguiente
+// bifurcación.
+// ============================================================
+
+function crearBifurcacion(
+    road
+) {{
+
+    if (
+        road.childNodeId !== null
+    ) {{
+
+        return nodes.find(
+            n =>
+                n.id ===
+                road.childNodeId
+        );
+    }}
+
+
+    const x =
+        road.x2;
+
+    const y =
+        road.y2;
+
+
+    const longitud =
+        1500 +
+        Math.random() *
+        700;
+
+
+    // Separación inicial muy pequeña:
+    // los caminos nacen de la bifurcación.
+    const separacion =
+        12;
+
+
+    const nivelReal =
+        Math.max(
+            1,
+            nivel +
+            difDinamica
+        );
+
+
+    // Pendiente base muy suave.
+    const baseAngle =
+        clamp(
+            (
+                Math.random() *
+                2 -
+                1
+            ) *
+            (
+                4 +
+                nivelReal * 0.7
+            ),
+            -9,
+            9
+        ) *
+        Math.PI /
+        180;
+
+
+    // Diferencia entre ambos caminos.
+    //
+    // Siempre hay una separación progresiva.
+    // Nunca se cruzan.
+    const diferencia =
+        (
+            1.2 +
+            Math.random() *
+            2.4
+        ) *
+        Math.PI /
+        180;
+
+
+    let topAngle =
+        baseAngle -
+        diferencia;
+
+
+    let bottomAngle =
+        baseAngle +
+        diferencia;
+
+
+    // Evitar ángulos extremos.
+    topAngle =
+        clamp(
+            topAngle,
+            -10 * Math.PI / 180,
+            10 * Math.PI / 180
+        );
+
+
+    bottomAngle =
+        clamp(
+            bottomAngle,
+            -10 * Math.PI / 180,
+            10 * Math.PI / 180
+        );
+
+
+    const topY1 =
+        y - separacion;
+
+
+    const bottomY1 =
+        y + separacion;
+
+
+    const topY2 =
+        topY1 +
+        Math.tan(topAngle) *
+        longitud;
+
+
+    const bottomY2 =
+        bottomY1 +
+        Math.tan(bottomAngle) *
+        longitud;
 
 
     // --------------------------------------------------------
-    // DOS CAMINOS
+    // ASEGURAR QUE NO SE CRUCEN
     // --------------------------------------------------------
     //
-    // Importante:
+    // top debe estar siempre por encima de bottom.
     //
-    // topY < bottomY
-    //
-    // La separación NUNCA llega a cero.
-    //
-    // Los caminos pueden:
-    // - separarse
-    // - mantenerse prácticamente paralelos
-    // - acercarse un poco
-    //
-    // pero jamás cruzarse.
+    // Si por azar la geometría los acercara demasiado,
+    // corregimos la pendiente.
     // --------------------------------------------------------
-
-    const branchLen =
-        3000 + Math.random() * 600;
-
-
-    const separacionInicial = 110;
-
-
-    // Cambio total de separación durante toda la rama.
-    //
-    // Positivo  -> se separan.
-    // Cero      -> paralelos.
-    // Negativo  -> se acercan, pero nunca llegan a tocarse.
-    //
-    // Como mínimo conservamos 70 px de separación.
-    const cambioSeparacion =
-        -35 + Math.random() * 155;
-
 
     const separacionFinal =
-        separacionInicial + cambioSeparacion;
+        bottomY2 -
+        topY2;
 
 
-    const pendienteSeparacion =
-        cambioSeparacion / branchLen;
+    if (
+        separacionFinal < 80
+    ) {{
+
+        const correccion =
+            (
+                80 -
+                separacionFinal
+            ) /
+            longitud;
 
 
-    const pendienteBase =
-        Math.tan(anguloPrincipal);
+        topAngle -=
+            correccion / 2;
+
+        bottomAngle +=
+            correccion / 2;
+    }}
 
 
-    const pendienteTop =
-        pendienteBase -
-        pendienteSeparacion / 2;
+    const topFinalY =
+        topY1 +
+        Math.tan(topAngle) *
+        longitud;
 
 
-    const pendienteBottom =
-        pendienteBase +
-        pendienteSeparacion / 2;
-
-
-    const topStartY =
-        splitY -
-        separacionInicial / 2;
-
-
-    const bottomStartY =
-        splitY +
-        separacionInicial / 2;
-
-
-    const topEndY =
-        topStartY +
-        pendienteTop * branchLen;
-
-
-    const bottomEndY =
-        bottomStartY +
-        pendienteBottom * branchLen;
-
-
-    const topAngle =
-        Math.atan(pendienteTop);
-
-
-    const bottomAngle =
-        Math.atan(pendienteBottom);
+    const bottomFinalY =
+        bottomY1 +
+        Math.tan(bottomAngle) *
+        longitud;
 
 
     // --------------------------------------------------------
     // PREGUNTA
     // --------------------------------------------------------
 
-    let preg =
-        generarPregunta(nv);
+    const pregunta =
+        generarPregunta(
+            nivelReal
+        );
 
 
-    let topSign =
+    const topSign =
         Math.random() > 0.5
             ? "SI"
             : "NO";
 
 
-    let bottomSign =
+    const bottomSign =
         topSign === "SI"
             ? "NO"
             : "SI";
 
 
     // --------------------------------------------------------
-    // TURBO
-    // --------------------------------------------------------
-
-    let tieneTurbo =
-        Math.random() < 0.35;
-
-
-    // --------------------------------------------------------
-    // APERTURA DEL CAMINO SUPERIOR
+    // APERTURA
     // --------------------------------------------------------
     //
-    // Solo puede existir si la distancia entre ambos caminos
-    // en esa zona es alcanzable mediante un salto.
+    // Solo en el camino superior.
     //
-    // El camino inferior NUNCA tiene apertura.
+    // Buscamos una zona donde la diferencia de altura sea
+    // suficientemente pequeña para que desde abajo se pueda
+    // saltar al superior.
     // --------------------------------------------------------
 
-    const aperturaCandidataX =
-        splitX +
-        branchLen * 0.38;
-
-
-    const separacionEnApertura =
-        obtenerSeparacionEnX(
-            aperturaCandidataX,
-            splitX,
-            separacionInicial,
-            cambioSeparacion,
-            branchLen
-        );
-
-
-    const puedeSubirAlSuperior =
-        separacionEnApertura <=
-        ALTURA_MAX_SALTO + 10;
-
-
-    let tieneAperturaSuperior =
-        puedeSubirAlSuperior &&
-        Math.random() < 0.70;
-
+    let tieneApertura =
+        false;
 
     let aperturaX1 = 0;
     let aperturaX2 = 0;
 
 
-    if (tieneAperturaSuperior) {
+    const posiblesX = [];
 
-        const anchoApertura =
-            100 + Math.random() * 45;
+
+    for (
+        let i = 0;
+        i <= 10;
+        i++
+    ) {{
+
+        const px =
+            x +
+            longitud *
+            (
+                0.15 +
+                0.65 *
+                (
+                    i / 10
+                )
+            );
+
+
+        const progreso =
+            (
+                px - x
+            ) /
+            longitud;
+
+
+        const pyTop =
+            topY1 +
+            Math.tan(topAngle) *
+            (
+                px - x
+            );
+
+
+        const pyBottom =
+            bottomY1 +
+            Math.tan(bottomAngle) *
+            (
+                px - x
+            );
+
+
+        const separacionActual =
+            pyBottom -
+            pyTop;
+
+
+        if (
+            separacionActual <=
+            ALTURA_MAX_SALTO * 0.92
+        ) {{
+
+            posiblesX.push(
+                px
+            );
+        }}
+    }}
+
+
+    if (
+        posiblesX.length > 0 &&
+        Math.random() < 0.75
+    ) {{
+
+        tieneApertura = true;
+
+
+        const centro =
+            posiblesX[
+                Math.floor(
+                    Math.random() *
+                    posiblesX.length
+                )
+            ];
+
+
+        const ancho =
+            90 +
+            Math.random() *
+            50;
 
 
         aperturaX1 =
-            aperturaCandidataX -
-            anchoApertura / 2;
+            centro -
+            ancho / 2;
 
 
         aperturaX2 =
-            aperturaCandidataX +
-            anchoApertura / 2;
-    }
+            centro +
+            ancho / 2;
+    }}
 
 
     // --------------------------------------------------------
-    // OBJETO DE LA CUESTA
+    // NODE
     // --------------------------------------------------------
 
-    slope = {
+    const node = {{
 
-        x1: inicioX,
-        y1: inicioY,
+        id: nextNodeId++,
 
-        splitX: splitX,
-        splitY: splitY,
+        x: x,
 
-        branchEndX:
-            splitX + branchLen,
+        y: y,
 
-        topStartY:
-            topStartY,
+        parentRoadId:
+            road.id,
 
-        bottomStartY:
-            bottomStartY,
+        topRoadId: null,
 
-        topEndY:
-            topEndY,
-
-        bottomEndY:
-            bottomEndY,
-
-        topAngle:
-            topAngle,
-
-        bottomAngle:
-            bottomAngle,
-
-        topSlope:
-            pendienteTop,
-
-        bottomSlope:
-            pendienteBottom,
-
-        separationInicial:
-            separacionInicial,
-
-        cambioSeparacion:
-            cambioSeparacion,
-
-        branchLen:
-            branchLen,
+        bottomRoadId: null,
 
         pregunta:
-            preg.texto,
+            pregunta.texto,
 
         correcta:
-            preg.correcta,
+            pregunta.correcta,
 
         topSign:
             topSign,
@@ -696,606 +1115,575 @@ function generarCuesta(inicioX, inicioY) {
         bottomSign:
             bottomSign,
 
-        tieneTurbo:
-            tieneTurbo,
-
-        turboStart:
-            inicioX + mainLen * 0.42,
-
-        turboEnd:
-            inicioX + mainLen * 0.42 + 400,
-
-        tieneAperturaSuperior:
-            tieneAperturaSuperior,
+        tieneApertura:
+            tieneApertura,
 
         aperturaX1:
             aperturaX1,
 
         aperturaX2:
-            aperturaX2
-    };
+            aperturaX2,
 
+        resuelto:
+            false
+    }};
 
-    // --------------------------------------------------------
-    // OBSTÁCULOS
-    // --------------------------------------------------------
 
-    entidades = [];
-
-
-    let numObstaculos =
-        Math.floor(nv * 1.5) + 1;
-
-
-    for (let i = 0; i < numObstaculos; i++) {
-
-        let ruta;
-
-
-        // Los obstáculos aparecen también en las dos ramas.
-        // Eso permite que la elección de camino importe.
-        let r =
-            Math.random();
-
-
-        if (r < 0.34) {
-
-            ruta = "main";
-
-        } else if (r < 0.67) {
-
-            ruta = "top";
-
-        } else {
-
-            ruta = "bottom";
-        }
-
-
-        let minX;
-        let maxX;
-
-
-        if (ruta === "main") {
-
-            minX =
-                inicioX + 450;
-
-            maxX =
-                splitX - 150;
-
-        } else {
-
-            minX =
-                splitX + 350;
-
-            maxX =
-                slope.branchEndX - 400;
-        }
-
-
-        if (maxX <= minX)
-            continue;
-
-
-        let ox =
-            minX +
-            Math.random() *
-            (maxX - minX);
-
-
-        // No colocamos obstáculos dentro de la apertura.
-        if (
-            ruta === "top" &&
-            tieneAperturaSuperior &&
-            ox > aperturaX1 - 50 &&
-            ox < aperturaX2 + 50
-        ) {
-            ox = aperturaX2 + 100;
-        }
-
-
-        let tipo;
-
-
-        let t =
-            Math.random();
-
-
-        if (t < 0.5) {
-
-            tipo = "obs_fijo";
-
-        } else if (t < 0.75) {
-
-            tipo = "obs_lento";
-
-        } else {
-
-            tipo = "obs_rapido";
-        }
-
-
-        entidades.push({
-
-            x: ox,
-
-            tipo: tipo,
-
-            activo: true,
-
-            w: 40,
-            h: 40,
-
-            ruta: ruta
-        });
-    }
-
-
-    // --------------------------------------------------------
-    // SIDRAS
-    // --------------------------------------------------------
-
-    let numSidras =
-        2 + Math.floor(Math.random() * 3);
-
-
-    for (let i = 0; i < numSidras; i++) {
-
-        let ruta =
-            Math.random() < 0.5
-                ? "main"
-                : "bottom";
-
-
-        let minX =
-            ruta === "main"
-                ? inicioX + 300
-                : splitX + 250;
-
-
-        let maxX =
-            ruta === "main"
-                ? splitX - 150
-                : slope.branchEndX - 300;
-
-
-        if (maxX <= minX)
-            continue;
-
-
-        entidades.push({
-
-            x:
-                minX +
-                Math.random() *
-                (maxX - minX),
-
-            tipo: "sidra",
-
-            activo: true,
-
-            w: 30,
-            h: 30,
-
-            ruta: ruta
-        });
-    }
-
-
-    // --------------------------------------------------------
-    // FABADA
-    // --------------------------------------------------------
-
-    if (Math.random() < 0.30) {
-
-        let ruta =
-            Math.random() < 0.5
-                ? "main"
-                : "bottom";
-
-
-        let minX =
-            ruta === "main"
-                ? inicioX + 500
-                : splitX + 300;
-
-
-        let maxX =
-            ruta === "main"
-                ? splitX - 200
-                : slope.branchEndX - 500;
-
-
-        if (maxX > minX) {
-
-            entidades.push({
-
-                x:
-                    minX +
-                    Math.random() *
-                    (maxX - minX),
-
-                tipo: "fabada",
-
-                activo: true,
-
-                w: 35,
-                h: 35,
-
-                ruta: ruta
-            });
-        }
-    }
-}
-
-
-// ============================================================
-// SEPARACIÓN ENTRE CAMINOS
-// ============================================================
-
-function obtenerSeparacionEnX(
-    x,
-    splitX,
-    separacionInicial,
-    cambioSeparacion,
-    branchLen
-) {
-
-    let progreso =
-        (x - splitX) /
-        branchLen;
-
-
-    progreso =
-        Math.max(
-            0,
-            Math.min(1, progreso)
-        );
-
-
-    return (
-        separacionInicial +
-        cambioSeparacion * progreso
-    );
-}
-
-
-// ============================================================
-// OBTENER Y DE UN CAMINO
-// ============================================================
-
-function obtenerYCamino(ruta, x) {
-
-    if (ruta === "main") {
-
-        return (
-            slope.y1 +
-            Math.tan(
-                Math.atan(
-                    (slope.splitY - slope.y1) /
-                    (slope.splitX - slope.x1)
-                )
-            ) *
-            (x - slope.x1)
-        );
-    }
-
-
-    if (ruta === "top") {
-
-        return (
-            slope.topStartY +
-            slope.topSlope *
-            (x - slope.splitX)
-        );
-    }
-
-
-    if (ruta === "bottom") {
-
-        return (
-            slope.bottomStartY +
-            slope.bottomSlope *
-            (x - slope.splitX)
-        );
-    }
-
-
-    return slope.splitY;
-}
-
-
-// ============================================================
-// APERTURA DEL CAMINO SUPERIOR
-// ============================================================
-
-function estaEnAperturaSuperior(x) {
-
-    if (!slope.tieneAperturaSuperior)
-        return false;
-
-
-    return (
-        x >= slope.aperturaX1 &&
-        x <= slope.aperturaX2
-    );
-}
-
-
-// ============================================================
-// SUPERFICIES DISPONIBLES DEBAJO DEL DINO
-// ============================================================
-//
-// Esta función es la clave para evitar cualquier caída al vacío.
-//
-// Antes de la bifurcación:
-//     solo existe el camino principal.
-//
-// Después:
-//     siempre existe el camino inferior.
-//
-// El superior puede desaparecer únicamente dentro de su apertura.
-// ============================================================
-
-function obtenerSuperficies(x) {
-
-    let superficies = [];
-
-
-    if (x < slope.splitX) {
-
-        superficies.push({
-
-            ruta: "main",
-
-            y:
-                obtenerYCamino(
-                    "main",
-                    x
-                )
-        });
-
-
-        return superficies;
-    }
+    nodes.push(node);
 
 
     // --------------------------------------------------------
     // CAMINO SUPERIOR
     // --------------------------------------------------------
 
-    if (!estaEnAperturaSuperior(x)) {
-
-        superficies.push({
-
-            ruta: "top",
-
-            y:
-                obtenerYCamino(
-                    "top",
-                    x
-                )
-        });
-    }
+    const topRoad =
+        crearRoad(
+            x,
+            topY1,
+            x + longitud,
+            topFinalY,
+            node.id,
+            "top",
+            nivelRoad + 1
+        );
 
 
     // --------------------------------------------------------
     // CAMINO INFERIOR
-    //
-    // SIEMPRE existe.
-    // NUNCA tiene agujeros.
     // --------------------------------------------------------
 
-    superficies.push({
-
-        ruta: "bottom",
-
-        y:
-            obtenerYCamino(
-                "bottom",
-                x
-            )
-    });
-
-
-    return superficies;
-}
-
-
-// ============================================================
-// RUTA MÁS CERCANA
-// ============================================================
-
-function obtenerRutaMasCercana() {
-
-    let x =
-        Math.min(
-            dino.x,
-            slope.branchEndX
+    const bottomRoad =
+        crearRoad(
+            x,
+            bottomY1,
+            x + longitud,
+            bottomFinalY,
+            node.id,
+            "bottom",
+            nivelRoad + 1
         );
 
 
-    let bottomDino =
-        dino.y + dino.h;
+    node.topRoadId =
+        topRoad.id;
+
+    node.bottomRoadId =
+        bottomRoad.id;
 
 
-    let superficies =
-        obtenerSuperficies(x);
+    road.childNodeId =
+        node.id;
 
 
-    let mejor =
-        superficies[0];
+    // --------------------------------------------------------
+    // GENERAR TAMBIÉN LA SIGUIENTE GENERACIÓN
+    // --------------------------------------------------------
+    //
+    // Esto es fundamental.
+    //
+    // Cuando el jugador vea una bifurcación,
+    // también verá caminos que salen de la siguiente.
+    // --------------------------------------------------------
+
+    crearBifurcacion(topRoad);
+
+    crearBifurcacion(bottomRoad);
 
 
-    let mejorDist =
-        Math.abs(
-            bottomDino -
-            mejor.y
-        );
+    generarEntidadesParaRoad(
+        topRoad
+    );
 
-
-    for (let i = 1; i < superficies.length; i++) {
-
-        let distancia =
-            Math.abs(
-                bottomDino -
-                superficies[i].y
-            );
-
-
-        if (distancia < mejorDist) {
-
-            mejor =
-                superficies[i];
-
-            mejorDist =
-                distancia;
-        }
-    }
-
-
-    return mejor.ruta;
-}
-
-
-// ============================================================
-// INICIO
-// ============================================================
-
-function iniciarJuego() {
-
-    dino = {
-
-        x: 0,
-
-        y: 200,
-
-        w: 40,
-        h: 40,
-
-        vy: 0,
-
-        enAire: false,
-
-        propulsado: false,
-
-        distPropulsion: 0,
-
-        ruta: "main"
-    };
-
-
-    cuestasCompletadas = 0;
-
-    nivel = 1;
-
-    difDinamica = 0;
-
-    fAcu = 0;
-
-    pedosAcu = 0;
-
-    sidras = 0;
-
-    juegoActivo = true;
-
-    cameraY = 0;
-
-
-    document.getElementById(
-        "game-over"
-    ).style.display = "none";
-
-
-    generarCuesta(
-        0,
-        300
+    generarEntidadesParaRoad(
+        bottomRoad
     );
 
 
-    actualizarUI();
-
-    loop();
-}
+    return node;
+}}
 
 
 // ============================================================
-// PROPULSIÓN
+// GENERACIÓN DE ENTIDADES
 // ============================================================
 
-function activarPropulsion() {
+function generarEntidadesParaRoad(
+    road
+) {{
+
+    // No llenamos demasiado los caminos.
+    const cantidad =
+        Math.floor(
+            Math.max(
+                1,
+                nivel * 0.7
+            )
+        );
+
+
+    for (
+        let i = 0;
+        i < cantidad;
+        i++
+    ) {{
+
+        const margen = 250;
+
+
+        const x =
+            road.x1 +
+            margen +
+            Math.random() *
+            Math.max(
+                100,
+                road.x2 -
+                road.x1 -
+                margen * 2
+            );
+
+
+        // Nunca poner un objeto en la zona
+        // exacta de bifurcación.
+        if (
+            x <
+            road.x1 + 180
+        ) {{
+            continue;
+        }}
+
+
+        let tipo;
+
+
+        const r =
+            Math.random();
+
+
+        if (
+            r < 0.42
+        ) {{
+
+            tipo =
+                "obs_fijo";
+
+        }} else if (
+            r < 0.70
+        ) {{
+
+            tipo =
+                "obs_lento";
+
+        }} else {{
+
+            tipo =
+                "obs_rapido";
+        }}
+
+
+        entidades.push({{
+
+            x: x,
+
+            roadId:
+                road.id,
+
+            tipo:
+                tipo,
+
+            activo:
+                true,
+
+            w:
+                40,
+
+            h:
+                40
+        }});
+    }}
+
+
+    // --------------------------------------------------------
+    // SIDRAS
+    // --------------------------------------------------------
 
     if (
-        pedosAcu > 0 &&
-        !dino.propulsado
-    ) {
+        Math.random() < 0.75
+    ) {{
 
-        dino.propulsado = true;
+        const x =
+            road.x1 +
+            300 +
+            Math.random() *
+            Math.max(
+                100,
+                road.x2 -
+                road.x1 -
+                500
+            );
 
-        dino.distPropulsion =
-            pedosAcu *
-            DISTANCIA_PEDO;
+
+        entidades.push({{
+
+            x: x,
+
+            roadId:
+                road.id,
+
+            tipo:
+                "sidra",
+
+            activo:
+                true,
+
+            w:
+                30,
+
+            h:
+                30
+        }});
+    }}
 
 
-        pedosAcu = 0;
+    // --------------------------------------------------------
+    // FABADA
+    // --------------------------------------------------------
 
-        actualizarUI();
-    }
-}
+    if (
+        Math.random() < 0.22
+    ) {{
+
+        const x =
+            road.x1 +
+            400 +
+            Math.random() *
+            Math.max(
+                100,
+                road.x2 -
+                road.x1 -
+                600
+            );
+
+
+        entidades.push({{
+
+            x: x,
+
+            roadId:
+                road.id,
+
+            tipo:
+                "fabada",
+
+            activo:
+                true,
+
+            w:
+                35,
+
+            h:
+                35
+        }});
+    }}
+}}
+
+
+// ============================================================
+// CREACIÓN INICIAL DEL MUNDO
+// ============================================================
+
+function crearMundoInicial() {{
+
+    roads = [];
+
+    nodes = [];
+
+    entidades = [];
+
+    nextRoadId = 1;
+
+    nextNodeId = 1;
+
+
+    // Primer camino.
+    //
+    // Este camino no es "una cuesta que se acaba":
+    // es el primer tramo de un árbol infinito.
+
+    const roadInicial =
+        crearRoad(
+            0,
+            300,
+            1500,
+            300,
+            null,
+            "main",
+            0
+        );
+
+
+    dino.roadId =
+        roadInicial.id;
+
+
+    // Generamos la primera bifurcación
+    // y varias generaciones por delante.
+
+    crearBifurcacion(
+        roadInicial
+    );
+
+
+    generarEntidadesParaRoad(
+        roadInicial
+    );
+}}
+
+
+// ============================================================
+// BUSCAR ROAD
+// ============================================================
+
+function obtenerRoad(
+    id
+) {{
+
+    return roads.find(
+        r =>
+            r.id === id
+    );
+}}
+
+
+// ============================================================
+// BUSCAR NODE
+// ============================================================
+
+function obtenerNode(
+    id
+) {{
+
+    return nodes.find(
+        n =>
+            n.id === id
+    );
+}}
+
+
+// ============================================================
+// APERTURA DEL CAMINO SUPERIOR
+// ============================================================
+
+function estaEnApertura(
+    node,
+    x
+) {{
+
+    if (
+        !node ||
+        !node.tieneApertura
+    ) {{
+        return false;
+    }}
+
+
+    return (
+        x >= node.aperturaX1 &&
+        x <= node.aperturaX2
+    );
+}}
+
+
+// ============================================================
+// ¿EL DINO ESTÁ EN UNA APERTURA?
+// ============================================================
+
+function aperturaDelRoadActual() {{
+
+    const road =
+        obtenerRoad(
+            dino.roadId
+        );
+
+
+    if (
+        !road ||
+        road.tipo !== "top"
+    ) {{
+        return null;
+    }}
+
+
+    const node =
+        obtenerNode(
+            road.parentNodeId
+        );
+
+
+    if (
+        estaEnApertura(
+            node,
+            dino.x
+        )
+    ) {{
+        return node;
+    }}
+
+
+    return null;
+}}
+
+
+// ============================================================
+// OBTENER CAMINO INFERIOR DE UNA BIFURCACIÓN
+// ============================================================
+
+function obtenerBottomRoad(
+    node
+) {{
+
+    return obtenerRoad(
+        node.bottomRoadId
+    );
+}}
+
+
+// ============================================================
+// OBTENER SUPERFICIE INFERIOR
+// ============================================================
+//
+// Esto permite que el camino inferior actúe siempre como
+// "red de seguridad".
+// ============================================================
+
+function obtenerSuperficieInferior(
+    node,
+    x
+) {{
+
+    const bottom =
+        obtenerBottomRoad(
+            node
+        );
+
+
+    if (!bottom)
+        return null;
+
+
+    return obtenerYEnRoad(
+        bottom,
+        x
+    );
+}}
+
+
+// ============================================================
+// COLISIÓN
+// ============================================================
+
+function colision(
+    a,
+    b
+) {{
+
+    return !(
+        b.x >
+        a.x + a.w ||
+
+        b.x + b.w <
+        a.x ||
+
+        b.y >
+        a.y + a.h ||
+
+        b.y + b.h <
+        a.y
+    );
+}}
 
 
 // ============================================================
 // SALTO
 // ============================================================
-//
-// No permitimos doble salto.
-//
-// Esto hace que cada salto tenga que partir desde un camino
-// real y siempre haya una superficie de aterrizaje.
-// ============================================================
 
-function salto() {
+function salto() {{
 
     if (
-        !dino.propulsado &&
+        dino.propulsado
+    ) {{
+        return;
+    }}
+
+
+    if (
         !dino.enAire
-    ) {
+    ) {{
 
         dino.vy =
             FUERZA_SALTO;
 
-        dino.enAire = true;
-    }
-}
+        dino.enAire =
+            true;
+    }}
+}}
 
 
 // ============================================================
-// CAÍDA RÁPIDA
+// CAER RÁPIDO
 // ============================================================
 
-function caidaRapida() {
+function caidaRapida() {{
 
-    if (dino.enAire) {
+    if (
+        dino.enAire
+    ) {{
 
         dino.vy += 10;
 
         return;
-    }
+    }}
 
 
-    // Si estamos arriba y existe una apertura,
-    // el botón ABAJO permite iniciar la caída.
+    const apertura =
+        aperturaDelRoadActual();
+
+
     if (
-        dino.ruta === "top" &&
-        estaEnAperturaSuperior(dino.x)
-    ) {
+        apertura
+    ) {{
 
-        dino.enAire = true;
+        dino.enAire =
+            true;
 
-        dino.vy = 3;
-    }
-}
+        dino.vy =
+            4;
+    }}
+}}
+
+
+// ============================================================
+// PEDO
+// ============================================================
+
+function activarPropulsion() {{
+
+    if (
+        pedosAcu > 0 &&
+        !dino.propulsado
+    ) {{
+
+        dino.propulsado =
+            true;
+
+        dino.distPropulsion =
+            pedosAcu *
+            DISTANCIA_PEDO;
+
+        pedosAcu = 0;
+
+        actualizarUI();
+    }}
+}}
 
 
 // ============================================================
@@ -1304,21 +1692,21 @@ function caidaRapida() {
 
 canvas.addEventListener(
     "touchstart",
-    (e) => {
+    function(e) {{
 
         e.preventDefault();
 
         salto();
-    }
+    }}
 );
 
 
 canvas.addEventListener(
     "click",
-    () => {
+    function() {{
 
         salto();
-    }
+    }}
 );
 
 
@@ -1326,12 +1714,12 @@ document.getElementById(
     "btn-drop"
 ).addEventListener(
     "touchstart",
-    (e) => {
+    function(e) {{
 
         e.preventDefault();
 
         caidaRapida();
-    }
+    }}
 );
 
 
@@ -1339,12 +1727,12 @@ document.getElementById(
     "btn-drop"
 ).addEventListener(
     "mousedown",
-    (e) => {
+    function(e) {{
 
         e.stopPropagation();
 
         caidaRapida();
-    }
+    }}
 );
 
 
@@ -1352,12 +1740,12 @@ document.getElementById(
     "btn-pedo"
 ).addEventListener(
     "touchstart",
-    (e) => {
+    function(e) {{
 
         e.preventDefault();
 
         activarPropulsion();
-    }
+    }}
 );
 
 
@@ -1365,603 +1753,768 @@ document.getElementById(
     "btn-pedo"
 ).addEventListener(
     "mousedown",
-    (e) => {
+    function(e) {{
 
         e.stopPropagation();
 
         activarPropulsion();
-    }
+    }}
 );
 
 
 document.addEventListener(
     "keydown",
-    (e) => {
+    function(e) {{
 
         if (
             e.code === "ArrowUp" ||
             e.code === "Space"
-        ) {
-
+        ) {{
             salto();
-        }
+        }}
 
 
         if (
             e.code === "ArrowDown"
-        ) {
-
+        ) {{
             caidaRapida();
-        }
+        }}
 
 
         if (
             e.code === "KeyF"
-        ) {
-
+        ) {{
             activarPropulsion();
-        }
-    }
+        }}
+    }}
 );
 
 
 // ============================================================
-// UI
+// ACTUALIZAR UI
 // ============================================================
 
-function actualizarUI() {
+function actualizarUI() {{
 
     document.getElementById(
         "sidras"
-    ).innerText = sidras;
+    ).innerText =
+        sidras;
 
 
     document.getElementById(
         "fabadas"
-    ).innerText = fAcu;
+    ).innerText =
+        fAcu;
 
 
     document.getElementById(
         "pedos"
-    ).innerText = pedosAcu;
+    ).innerText =
+        pedosAcu;
 
 
     document.getElementById(
         "nivel"
-    ).innerText = nivel;
+    ).innerText =
+        nivel;
 
 
     document.getElementById(
         "dif"
     ).innerText =
         difDinamica.toFixed(1);
-}
+}}
 
 
 // ============================================================
-// FINAL DE UNA CUESTA
+// ENTRAR EN UNA NUEVA RUTA
 // ============================================================
 
-function procesarFinalCuesta() {
+function entrarEnRoad(
+    road
+) {{
 
-    // Elegimos el camino en el que realmente está el dino.
-    let rutaFinal;
-
-
-    if (dino.enAire) {
-
-        rutaFinal =
-            obtenerRutaMasCercana();
-
-    } else {
-
-        rutaFinal =
-            dino.ruta;
-    }
+    if (!road)
+        return;
 
 
     if (
-        rutaFinal !== "top" &&
-        rutaFinal !== "bottom"
-    ) {
+        dino.roadId ===
+        road.id
+    ) {{
+        return;
+    }}
 
-        rutaFinal = "bottom";
-    }
+
+    dino.roadId =
+        road.id;
 
 
-    let yFinal =
-        obtenerYCamino(
-            rutaFinal,
-            slope.branchEndX
+    // --------------------------------------------------------
+    // Registrar la respuesta de la bifurcación
+    // --------------------------------------------------------
+
+    if (
+        road.parentNodeId !== null
+    ) {{
+
+        const node =
+            obtenerNode(
+                road.parentNodeId
+            );
+
+
+        if (
+            node &&
+            !node.resuelto
+        ) {{
+
+            node.resuelto =
+                true;
+
+
+            const signo =
+                road.tipo === "top"
+                    ? node.topSign
+                    : node.bottomSign;
+
+
+            if (
+                signo ===
+                node.correcta
+            ) {{
+
+                difDinamica =
+                    Math.max(
+                        0,
+                        difDinamica -
+                        0.5
+                    );
+
+            }} else {{
+
+                difDinamica +=
+                    0.8;
+            }}
+
+
+            cuestasCompletadas++;
+
+
+            if (
+                cuestasCompletadas %
+                10 === 0
+            ) {{
+                nivel++;
+            }}
+
+
+            actualizarUI();
+        }}
+    }}
+}}
+
+
+// ============================================================
+// FÍSICA DEL DINO
+// ============================================================
+
+function actualizarDino() {{
+
+    const road =
+        obtenerRoad(
+            dino.roadId
         );
 
 
-    // Nunca dejamos al dino sin suelo.
-    dino.x =
-        slope.branchEndX;
+    if (!road)
+        return;
 
 
-    dino.y =
-        yFinal -
+    const anteriorBottom =
+        dino.y +
         dino.h;
 
 
-    dino.vy = 0;
-
-    dino.enAire = false;
-
-    dino.ruta = "main";
-
-
-    cuestasCompletadas++;
-
+    // --------------------------------------------------------
+    // MOVIMIENTO VERTICAL
+    // --------------------------------------------------------
 
     if (
-        cuestasCompletadas % 10 === 0
-    ) {
+        dino.enAire
+    ) {{
 
-        nivel++;
-    }
+        dino.y +=
+            dino.vy;
 
+        dino.vy +=
+            GRAVEDAD;
 
-    generarCuesta(
-        slope.branchEndX,
-        yFinal
-    );
+    }} else {{
 
-
-    actualizarUI();
-}
-
-
-// ============================================================
-// COLISIÓN
-// ============================================================
-
-function colision(r1, r2) {
-
-    return !(
-        r2.x > r1.x + r1.w ||
-        r2.x + r2.w < r1.x ||
-        r2.y > r1.y + r1.h ||
-        r2.y + r2.h < r1.y
-    );
-}
-
-
-// ============================================================
-// ACTUALIZAR SUELO / SALTO
-// ============================================================
-//
-// Nunca buscamos "caer al vacío".
-//
-// Si el personaje está cayendo:
-//     - primero comprobamos camino superior
-//     - después camino inferior
-//
-// Si el superior no existe por una apertura:
-//     el inferior sigue existiendo y lo recoge.
-// ============================================================
-
-function actualizarFisicaSuelo(prevBottom) {
-
-    let superficies =
-        obtenerSuperficies(
-            dino.x
-        );
+        // Pegado al camino actual.
+        dino.y =
+            obtenerYEnRoad(
+                road,
+                dino.x
+            ) -
+            dino.h;
+    }}
 
 
     // --------------------------------------------------------
-    // DINO EN EL AIRE
+    // SI ESTÁ EN EL AIRE:
+    // BUSCAR ATERRIZAJE
     // --------------------------------------------------------
 
-    if (dino.enAire) {
-
-        if (dino.vy >= 0) {
-
-            let mejorSuperficie = null;
-
-
-            for (
-                let i = 0;
-                i < superficies.length;
-                i++
-            ) {
-
-                let s =
-                    superficies[i];
-
-
-                // Solo aterrizamos si el dino estaba
-                // por encima de la superficie en el frame anterior.
-                if (
-                    prevBottom <= s.y + 8 &&
-                    dino.y + dino.h >= s.y
-                ) {
-
-                    if (
-                        mejorSuperficie === null ||
-                        s.y < mejorSuperficie.y
-                    ) {
-
-                        mejorSuperficie =
-                            s;
-                    }
-                }
-            }
-
-
-            if (
-                mejorSuperficie !== null
-            ) {
-
-                dino.y =
-                    mejorSuperficie.y -
-                    dino.h;
-
-
-                dino.vy = 0;
-
-                dino.enAire = false;
-
-                dino.ruta =
-                    mejorSuperficie.ruta;
-
-                return;
-            }
-        }
-
-
-        return;
-    }
-
-
-    // --------------------------------------------------------
-    // DINO EN EL SUELO
-    // --------------------------------------------------------
-
-    let superficieActual = null;
-
-
-    // Si estamos arriba y entramos en una apertura,
-    // el camino superior deja de existir.
     if (
-        dino.ruta === "top" &&
-        estaEnAperturaSuperior(dino.x)
-    ) {
+        dino.enAire &&
+        dino.vy >= 0
+    ) {{
 
-        dino.enAire = true;
-
-        dino.vy = 2;
-
-        return;
-    }
-
-
-    // Buscamos la superficie correspondiente a la ruta actual.
-    for (
-        let i = 0;
-        i < superficies.length;
-        i++
-    ) {
+        // ====================================================
+        // 1. CAMINO ACTUAL
+        // ====================================================
 
         if (
-            superficies[i].ruta ===
-            dino.ruta
-        ) {
+            dino.x >= road.x1 &&
+            dino.x <= road.x2
+        ) {{
 
-            superficieActual =
-                superficies[i];
+            const roadY =
+                obtenerYEnRoad(
+                    road,
+                    dino.x
+                );
 
-            break;
-        }
-    }
-
-
-    // Si el camino actual ha terminado,
-    // usamos automáticamente el inferior.
-    if (
-        superficieActual === null
-    ) {
-
-        for (
-            let i = 0;
-            i < superficies.length;
-            i++
-        ) {
 
             if (
-                superficies[i].ruta ===
-                "bottom"
-            ) {
+                anteriorBottom <=
+                roadY + 5 &&
+                dino.y +
+                dino.h >=
+                roadY
+            ) {{
 
-                superficieActual =
-                    superficies[i];
+                dino.y =
+                    roadY -
+                    dino.h;
 
-                break;
-            }
-        }
-    }
+                dino.vy =
+                    0;
+
+                dino.enAire =
+                    false;
+
+                return;
+            }}
+        }}
 
 
-    // Seguridad absoluta:
-    // si por cualquier razón no encontramos ruta,
-    // utilizamos la superficie más baja disponible.
+        // ====================================================
+        // 2. SI ES EL CAMINO SUPERIOR Y HAY APERTURA
+        // ====================================================
+
+        if (
+            road.tipo === "top"
+        ) {{
+
+            const node =
+                obtenerNode(
+                    road.parentNodeId
+                );
+
+
+            if (
+                estaEnApertura(
+                    node,
+                    dino.x
+                )
+            ) {{
+
+                // No aterrizamos en el superior.
+                //
+                // Buscamos inmediatamente el inferior.
+                const bottom =
+                    obtenerBottomRoad(
+                        node
+                    );
+
+
+                if (
+                    bottom &&
+                    dino.x >=
+                    bottom.x1 &&
+                    dino.x <=
+                    bottom.x2
+                ) {{
+
+                    const bottomY =
+                        obtenerYEnRoad(
+                            bottom,
+                            dino.x
+                        );
+
+
+                    if (
+                        dino.y +
+                        dino.h >=
+                        bottomY
+                    ) {{
+
+                        dino.y =
+                            bottomY -
+                            dino.h;
+
+                        dino.vy =
+                            0;
+
+                        dino.enAire =
+                            false;
+
+                        entrarEnRoad(
+                            bottom
+                        );
+
+                        return;
+                    }}
+                }}
+            }}
+        }}
+
+
+        // ====================================================
+        // 3. DETECTAR EL CAMINO SUPERIOR
+        // ====================================================
+        //
+        // Solo podemos aterrizar sobre él si realmente
+        // llegamos desde abajo mediante un salto.
+        // ====================================================
+
+        const node =
+            obtenerNode(
+                road.childNodeId
+            );
+
+
+        if (
+            node
+        ) {{
+
+            const topRoad =
+                obtenerRoad(
+                    node.topRoadId
+                );
+
+
+            const bottomRoad =
+                obtenerRoad(
+                    node.bottomRoadId
+                );
+
+
+            // ------------------------------------------------
+            // SUPERIOR
+            // ------------------------------------------------
+
+            if (
+                topRoad &&
+                dino.x >=
+                topRoad.x1 &&
+                dino.x <=
+                topRoad.x2
+            ) {{
+
+                const topY =
+                    obtenerYEnRoad(
+                        topRoad,
+                        dino.x
+                    );
+
+
+                if (
+                    anteriorBottom <=
+                    topY + 8 &&
+                    dino.y +
+                    dino.h >=
+                    topY &&
+                    !estaEnApertura(
+                        node,
+                        dino.x
+                    )
+                ) {{
+
+                    dino.y =
+                        topY -
+                        dino.h;
+
+                    dino.vy =
+                        0;
+
+                    dino.enAire =
+                        false;
+
+                    entrarEnRoad(
+                        topRoad
+                    );
+
+                    return;
+                }}
+            }}
+
+
+            // ------------------------------------------------
+            // INFERIOR
+            // ------------------------------------------------
+
+            if (
+                bottomRoad &&
+                dino.x >=
+                bottomRoad.x1 &&
+                dino.x <=
+                bottomRoad.x2
+            ) {{
+
+                const bottomY =
+                    obtenerYEnRoad(
+                        bottomRoad,
+                        dino.x
+                    );
+
+
+                if (
+                    anteriorBottom <=
+                    bottomY + 10 &&
+                    dino.y +
+                    dino.h >=
+                    bottomY
+                ) {{
+
+                    dino.y =
+                        bottomY -
+                        dino.h;
+
+                    dino.vy =
+                        0;
+
+                    dino.enAire =
+                        false;
+
+                    entrarEnRoad(
+                        bottomRoad
+                    );
+
+                    return;
+                }}
+            }}
+        }}
+    }}
+
+
+    // ========================================================
+    // LLEGADA AL FINAL DE UN ROAD
+    // ========================================================
+    //
+    // MUY IMPORTANTE:
+    //
+    // No teletransportamos.
+    //
+    // El road ya tiene un nodo y sus dos caminos hijos
+    // ya existen.
+    //
+    // El jugador pasa físicamente a la bifurcación.
+    // ========================================================
+
     if (
-        superficieActual === null &&
-        superficies.length > 0
-    ) {
+        dino.x >=
+        road.x2
+    ) {{
 
-        superficieActual =
-            superficies[0];
-    }
-
-
-    if (
-        superficieActual !== null
-    ) {
-
-        dino.y =
-            superficieActual.y -
-            dino.h;
+        const node =
+            obtenerNode(
+                road.childNodeId
+            );
 
 
-        dino.ruta =
-            superficieActual.ruta;
-    }
-}
+        if (!node)
+            return;
+
+
+        const topRoad =
+            obtenerRoad(
+                node.topRoadId
+            );
+
+
+        const bottomRoad =
+            obtenerRoad(
+                node.bottomRoadId
+            );
+
+
+        // ----------------------------------------------------
+        // SI ESTÁ EN EL AIRE
+        // ----------------------------------------------------
+        //
+        // No forzamos ninguna ruta.
+        //
+        // Los caminos están debajo y la física decide.
+        // ----------------------------------------------------
+
+        if (
+            dino.enAire
+        ) {{
+            return;
+        }}
+
+
+        // ----------------------------------------------------
+        // SI LLEGA AL NODO POR TIERRA
+        //
+        // El camino inferior es la continuación segura.
+        // El superior requiere haber saltado.
+        // ----------------------------------------------------
+
+        if (
+            bottomRoad
+        ) {{
+
+            dino.x =
+                Math.max(
+                    dino.x,
+                    bottomRoad.x1
+                );
+
+
+            const bottomY =
+                obtenerYEnRoad(
+                    bottomRoad,
+                    dino.x
+                );
+
+
+            dino.y =
+                bottomY -
+                dino.h;
+
+
+            entrarEnRoad(
+                bottomRoad
+            );
+        }}
+    }}
+}}
 
 
 // ============================================================
-// LOOP PRINCIPAL
+// MOVIMIENTO HORIZONTAL
 // ============================================================
 
-function loop() {
+function obtenerVelocidad() {{
 
-    if (!juegoActivo)
-        return;
-
-
-    let velTotal =
+    let velocidad =
         baseVelocidad +
         nivel * 0.4 +
         difDinamica * 0.2;
 
 
-    // --------------------------------------------------------
-    // TURBO
-    // --------------------------------------------------------
-
     if (
-        slope.tieneTurbo &&
-        dino.x > slope.turboStart &&
-        dino.x < slope.turboEnd &&
-        !dino.propulsado
-    ) {
+        dino.propulsado
+    ) {{
 
-        velTotal *= 1.8;
-    }
+        velocidad *=
+            3.5;
 
-
-    // --------------------------------------------------------
-    // PROPULSIÓN
-    // --------------------------------------------------------
-
-    if (dino.propulsado) {
-
-        velTotal *= 3.5;
 
         dino.distPropulsion -=
-            velTotal;
+            velocidad;
 
 
         if (
-            dino.distPropulsion <= 0
-        ) {
+            dino.distPropulsion <=
+            0
+        ) {{
 
-            dino.propulsado = false;
-        }
+            dino.propulsado =
+                false;
+        }}
     }
 
 
-    // --------------------------------------------------------
-    // MOVIMIENTO HORIZONTAL
-    // --------------------------------------------------------
-
-    dino.x += velTotal;
+    return velocidad;
+}}
 
 
-    // --------------------------------------------------------
-    // SALTO
-    // --------------------------------------------------------
+// ============================================================
+// ENTIDADES
+// ============================================================
 
-    let prevBottom =
-        dino.y + dino.h;
-
-
-    if (dino.enAire) {
-
-        dino.y += dino.vy;
-
-        dino.vy += GRAVEDAD;
-    }
-
-
-    // --------------------------------------------------------
-    // FÍSICA DE CAMINOS
-    // --------------------------------------------------------
-
-    actualizarFisicaSuelo(
-        prevBottom
-    );
-
-
-    // --------------------------------------------------------
-    // TRANSICIÓN A LA SIGUIENTE CUESTA
-    // --------------------------------------------------------
-    //
-    // La nueva cuesta empieza antes de que pueda existir
-    // una zona sin suelo.
-    //
-    // Así, incluso si el dino está saltando al llegar al
-    // final, la siguiente superficie ya existe.
-    // --------------------------------------------------------
-
-    if (
-        dino.x >=
-        slope.branchEndX - 80
-    ) {
-
-        procesarFinalCuesta();
-    }
-
-
-    // --------------------------------------------------------
-    // OBSTÁCULOS Y OBJETOS
-    // --------------------------------------------------------
+function actualizarEntidades(
+    velocidad
+) {{
 
     entidades.forEach(
-        e => {
+        e => {{
 
-            if (!e.activo)
+            if (
+                !e.activo
+            )
                 return;
 
 
-            let eVel = 0;
+            const road =
+                obtenerRoad(
+                    e.roadId
+                );
+
+
+            if (!road)
+                return;
+
+
+            // Obstáculos móviles.
+            if (
+                e.tipo ===
+                "obs_lento"
+            ) {{
+
+                e.x +=
+                    velocidad *
+                    0.4;
+            }}
 
 
             if (
-                e.tipo === "obs_lento"
-            ) {
+                e.tipo ===
+                "obs_rapido"
+            ) {{
 
-                eVel =
-                    velTotal * 0.4;
-            }
+                e.x -=
+                    velocidad *
+                    0.7;
+            }}
 
+
+            // ------------------------------------------------
+            // OBJETOS QUE SE SALEN DE SU ROAD
+            // ------------------------------------------------
 
             if (
-                e.tipo === "obs_rapido"
-            ) {
-
-                eVel =
-                    -(velTotal + difDinamica);
-            }
-
-
-            e.x += eVel;
-
-
-            let yCamino;
-
-
-            if (e.ruta === "main") {
-
-                yCamino =
-                    obtenerYCamino(
-                        "main",
-                        e.x
-                    );
-
-            } else {
-
-                yCamino =
-                    obtenerYCamino(
-                        e.ruta,
-                        e.x
-                    );
-            }
+                e.x <
+                road.x1 - 100 ||
+                e.x >
+                road.x2 + 100
+            ) {{
+                return;
+            }}
 
 
             e.y =
-                yCamino -
+                obtenerYEnRoad(
+                    road,
+                    e.x
+                ) -
                 e.h;
 
 
-            // No colocamos físicamente objetos dentro
-            // de una apertura superior.
-            if (
-                e.ruta === "top" &&
-                estaEnAperturaSuperior(e.x)
-            ) {
+            // ------------------------------------------------
+            // COLISIÓN
+            // ------------------------------------------------
 
-                e.activo = false;
+            const cajaDino = {{
 
-                return;
-            }
+                x:
+                    dino.x,
 
+                y:
+                    dino.y,
 
-            let cajaDino = {
+                w:
+                    dino.w,
 
-                x: dino.x,
-                y: dino.y,
-                w: dino.w,
-                h: dino.h
-            };
+                h:
+                    dino.h
+            }};
 
 
-            let cajaE = {
+            const cajaEntidad = {{
 
-                x: e.x,
-                y: e.y,
-                w: e.w,
-                h: e.h
-            };
+                x:
+                    e.x,
+
+                y:
+                    e.y,
+
+                w:
+                    e.w,
+
+                h:
+                    e.h
+            }};
 
 
             if (
                 colision(
                     cajaDino,
-                    cajaE
+                    cajaEntidad
                 )
-            ) {
+            ) {{
 
                 if (
-                    e.tipo === "sidra"
-                ) {
+                    e.tipo ===
+                    "sidra"
+                ) {{
 
                     sidras++;
 
-                    e.activo = false;
+                    e.activo =
+                        false;
 
                     actualizarUI();
 
-                } else if (
-                    e.tipo === "fabada"
-                ) {
+                }} else if (
+                    e.tipo ===
+                    "fabada"
+                ) {{
 
                     fAcu++;
 
-                    e.activo = false;
+                    e.activo =
+                        false;
 
 
                     if (
                         fAcu >=
                         CONST_FABADA
-                    ) {
+                    ) {{
 
                         pedosAcu++;
 
                         fAcu = 0;
-                    }
+                    }}
 
 
                     actualizarUI();
 
-                } else if (
+                }} else if (
                     e.tipo.startsWith(
                         "obs_"
                     )
-                ) {
+                ) {{
 
                     if (
                         dino.propulsado
-                    ) {
+                    ) {{
 
-                        e.activo = false;
+                        e.activo =
+                            false;
 
-                    } else {
+                    }} else {{
 
-                        juegoActivo = false;
+                        juegoActivo =
+                            false;
+
 
                         document.getElementById(
                             "final-sidras"
@@ -1973,118 +2526,559 @@ function loop() {
                             "game-over"
                         ).style.display =
                             "block";
-                    }
-                }
-            }
-        }
+                    }}
+                }}
+            }}
+        }}
     );
+}}
+
+
+// ============================================================
+// GENERACIÓN CONTINUA
+// ============================================================
+//
+// No esperamos a llegar al final.
+//
+// Si el jugador está avanzando por una rama,
+// comprobamos que existan varias generaciones por delante.
+//
+// Si no existen, las creamos.
+//
+// Esto convierte el árbol en un mundo prácticamente infinito.
+// ============================================================
+
+function mantenerMundoPorDelante() {{
+
+    const distanciaNecesaria =
+        6000;
+
+
+    const maxX =
+        dino.x +
+        distanciaNecesaria;
 
 
     // --------------------------------------------------------
-    // CÁMARA
-    // --------------------------------------------------------
-    //
-    // La cámara no sigue únicamente al dino.
-    //
-    // Mantiene visibles las dos rutas.
-    // Esto evita que un salto haga desaparecer el camino
-    // de la pantalla.
+    // Para cada road que ya está cerca del horizonte,
+    // generar sus hijos.
     // --------------------------------------------------------
 
-    let refRuta;
+    let cambios =
+        true;
+
+
+    while (cambios) {{
+
+        cambios =
+            false;
+
+
+        for (
+            let i = 0;
+            i < roads.length;
+            i++
+        ) {{
+
+            const road =
+                roads[i];
+
+
+            if (
+                road.x2 <
+                maxX
+            ) {{
+
+                if (
+                    road.childNodeId ===
+                    null
+                ) {{
+
+                    crearBifurcacion(
+                        road
+                    );
+
+                    cambios =
+                        true;
+                }}
+            }}
+        }}
+    }}
+}}
+
+
+// ============================================================
+// LIMPIEZA DEL MUNDO
+// ============================================================
+//
+// Borramos solamente caminos muy alejados detrás.
+// Nunca eliminamos el camino actual ni caminos que puedan
+// ser necesarios para la física inmediata.
+// ============================================================
+
+function limpiarMundo() {{
+
+    const limite =
+        dino.x -
+        2500;
 
 
     if (
-        dino.x < slope.splitX
-    ) {
+        roads.length < 80
+    ) {{
+        return;
+    }}
 
-        refRuta =
-            obtenerYCamino(
-                "main",
-                dino.x
+
+    roads =
+        roads.filter(
+            r =>
+                r ===
+                obtenerRoad(
+                    dino.roadId
+                ) ||
+                r.x2 >
+                limite
+        );
+
+
+    entidades =
+        entidades.filter(
+            e =>
+                e.activo &&
+                e.x >
+                limite
+        );
+}}
+
+
+// ============================================================
+// CÁMARA
+// ============================================================
+
+function actualizarCamara() {{
+
+    const roadActual =
+        obtenerRoad(
+            dino.roadId
+        );
+
+
+    if (!roadActual)
+        return;
+
+
+    // --------------------------------------------------------
+    // Buscar caminos visibles hacia delante.
+    // --------------------------------------------------------
+
+    const limiteX =
+        dino.x +
+        2800;
+
+
+    let minY =
+        dino.y;
+
+
+    let maxY =
+        dino.y +
+        dino.h;
+
+
+    for (
+        let i = 0;
+        i < roads.length;
+        i++
+    ) {{
+
+        const r =
+            roads[i];
+
+
+        if (
+            r.x2 <
+            dino.x - 200
+        )
+            continue;
+
+
+        if (
+            r.x1 >
+            limiteX
+        )
+            continue;
+
+
+        minY =
+            Math.min(
+                minY,
+                r.y1,
+                r.y2
             );
 
-    } else {
 
-        let topY =
-            obtenerYCamino(
-                "top",
-                dino.x
-            );
-
-
-        let bottomY =
-            obtenerYCamino(
-                "bottom",
-                dino.x
-            );
-
-
-        let centro =
-            (topY + bottomY) / 2;
-
-
-        let dinoCentro =
-            dino.y +
-            dino.h / 2;
-
-
-        let diferencia =
-            dinoCentro -
-            centro;
-
-
-        // La cámara puede acompañar al salto,
-        // pero nunca desplaza completamente las dos rutas.
-        diferencia =
+        maxY =
             Math.max(
-                -110,
-                Math.min(
-                    110,
-                    diferencia
-                )
+                maxY,
+                r.y1,
+                r.y2
             );
+    }}
 
 
-        refRuta =
-            centro + diferencia;
-    }
+    // --------------------------------------------------------
+    // Evitamos que la geometría se vaya fuera de pantalla.
+    // --------------------------------------------------------
+
+    const centroMundo =
+        (
+            minY +
+            maxY
+        ) / 2;
 
 
-    let targetCamY =
-        canvas.height * 0.58 -
-        refRuta;
+    const centroDeseado =
+        (
+            dino.y +
+            dino.h / 2 +
+            centroMundo
+        ) / 2;
+
+
+    const target =
+        canvas.height * 0.53 -
+        centroDeseado;
 
 
     cameraY +=
         (
-            targetCamY -
+            target -
             cameraY
-        ) * 0.10;
+        ) *
+        0.08;
+
+
+    // Limitar desplazamiento exagerado.
+    cameraY =
+        clamp(
+            cameraY,
+            -700,
+            450
+        );
+}}
+
+
+// ============================================================
+// DIBUJAR UN ROAD
+// ============================================================
+
+function dibujarRoad(
+    road
+) {{
+
+    if (!road)
+        return;
+
+
+    const visibleAntes =
+        road.x2 >
+        dino.x - 800;
+
+
+    const visibleDespues =
+        road.x1 <
+        dino.x + 4500;
+
+
+    if (
+        !visibleAntes ||
+        !visibleDespues
+    ) {{
+        return;
+    }}
+
+
+    ctx.lineWidth =
+        14;
+
+
+    ctx.lineCap =
+        "round";
+
+
+    if (
+        road.tipo === "top"
+    ) {{
+
+        ctx.strokeStyle =
+            "#2980b9";
+
+    }} else if (
+        road.tipo === "bottom"
+    ) {{
+
+        ctx.strokeStyle =
+            "#c0392b";
+
+    }} else {{
+
+        ctx.strokeStyle =
+            "#27ae60";
+    }}
+
+
+    const node =
+        road.childNodeId !== null
+            ? obtenerNode(
+                road.childNodeId
+            )
+            : null;
 
 
     // --------------------------------------------------------
-    // DIBUJAR
+    // CAMINO SUPERIOR
+    //
+    // Si tiene apertura, no dibujamos ese trozo.
     // --------------------------------------------------------
 
-    dibujarEscena();
+    if (
+        road.tipo === "top"
+    ) {{
 
-
-    if (juegoActivo) {
-
-        frameId =
-            requestAnimationFrame(
-                loop
+        const parent =
+            obtenerNode(
+                road.parentNodeId
             );
-    }
-}
+
+
+        if (
+            parent &&
+            parent.tieneApertura
+        ) {{
+
+            // Tramo antes de apertura.
+            ctx.beginPath();
+
+            ctx.moveTo(
+                road.x1,
+                road.y1
+            );
+
+            ctx.lineTo(
+                parent.aperturaX1,
+                obtenerYEnRoad(
+                    road,
+                    parent.aperturaX1
+                )
+            );
+
+            ctx.stroke();
+
+
+            // Tramo después.
+            ctx.beginPath();
+
+            ctx.moveTo(
+                parent.aperturaX2,
+                obtenerYEnRoad(
+                    road,
+                    parent.aperturaX2
+                )
+            );
+
+            ctx.lineTo(
+                road.x2,
+                road.y2
+            );
+
+            ctx.stroke();
+
+
+            // Indicador de apertura.
+            const aperturaCentro =
+                (
+                    parent.aperturaX1 +
+                    parent.aperturaX2
+                ) / 2;
+
+
+            const aperturaY =
+                obtenerYEnRoad(
+                    road,
+                    aperturaCentro
+                );
+
+
+            ctx.save();
+
+            ctx.strokeStyle =
+                "#e74c3c";
+
+            ctx.lineWidth =
+                4;
+
+            ctx.setLineDash(
+                [8, 8]
+            );
+
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                parent.aperturaX1,
+                aperturaY + 12
+            );
+
+            ctx.lineTo(
+                parent.aperturaX2,
+                aperturaY + 12
+            );
+
+            ctx.stroke();
+
+            ctx.restore();
+
+
+            return;
+        }}
+    }}
+
+
+    // Road normal.
+    ctx.beginPath();
+
+    ctx.moveTo(
+        road.x1,
+        road.y1
+    );
+
+    ctx.lineTo(
+        road.x2,
+        road.y2
+    );
+
+    ctx.stroke();
+}}
+
+
+// ============================================================
+// DIBUJAR NODO / BIFURCACIÓN
+// ============================================================
+
+function dibujarNode(
+    node
+) {{
+
+    if (!node)
+        return;
+
+
+    if (
+        node.x <
+        dino.x - 800 ||
+        node.x >
+        dino.x + 3500
+    ) {{
+        return;
+    }}
+
+
+    // --------------------------------------------------------
+    // Pregunta
+    // --------------------------------------------------------
+
+    ctx.fillStyle =
+        "rgba(0,0,0,0.72)";
+
+
+    ctx.fillRect(
+        node.x - 150,
+        node.y - 150,
+        300,
+        48
+    );
+
+
+    ctx.fillStyle =
+        "#f1c40f";
+
+
+    ctx.font =
+        "bold 24px Arial";
+
+
+    ctx.fillText(
+        node.pregunta,
+        node.x - 135,
+        node.y - 116
+    );
+
+
+    // --------------------------------------------------------
+    // SEÑAL SUPERIOR
+    // --------------------------------------------------------
+
+    const topRoad =
+        obtenerRoad(
+            node.topRoadId
+        );
+
+
+    const bottomRoad =
+        obtenerRoad(
+            node.bottomRoadId
+        );
+
+
+    if (
+        topRoad
+    ) {{
+
+        ctx.fillStyle =
+            "#fff";
+
+        ctx.font =
+            "bold 26px Arial";
+
+
+        ctx.fillText(
+            node.topSign,
+            node.x + 60,
+            node.y - 45
+        );
+    }}
+
+
+    // --------------------------------------------------------
+    // SEÑAL INFERIOR
+    // --------------------------------------------------------
+
+    if (
+        bottomRoad
+    ) {{
+
+        ctx.fillStyle =
+            "#fff";
+
+        ctx.font =
+            "bold 26px Arial";
+
+
+        ctx.fillText(
+            node.bottomSign,
+            node.x + 60,
+            node.y + 55
+        );
+    }}
+}}
 
 
 // ============================================================
 // DIBUJAR ESCENA
 // ============================================================
 
-function dibujarEscena() {
+function dibujarEscena() {{
 
     // --------------------------------------------------------
     // FONDO
@@ -2102,16 +3096,10 @@ function dibujarEscena() {
     );
 
 
-    if (dino.propulsado) {
-
-        ctx.fillStyle =
-            "#ffb142";
-
-    } else {
-
-        ctx.fillStyle =
-            "#87CEEB";
-    }
+    ctx.fillStyle =
+        dino.propulsado
+            ? "#ffb142"
+            : "#87CEEB";
 
 
     ctx.fillRect(
@@ -2138,335 +3126,100 @@ function dibujarEscena() {
     );
 
 
-    // ========================================================
-    // CAMINO PRINCIPAL
-    // ========================================================
+    // --------------------------------------------------------
+    // ROADS
+    // --------------------------------------------------------
 
-    ctx.lineWidth = 14;
+    for (
+        let i = 0;
+        i < roads.length;
+        i++
+    ) {{
 
-    ctx.strokeStyle = "#27ae60";
-
-    ctx.lineCap = "round";
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        slope.x1,
-        slope.y1
-    );
-
-    ctx.lineTo(
-        slope.splitX,
-        slope.splitY
-    );
-
-    ctx.stroke();
-
-
-    // ========================================================
-    // CAMINOS SUPERIOR E INFERIOR
-    // ========================================================
-
-    //
-    // Los dibujamos desde el punto de bifurcación.
-    //
-    // Esto hace que desde el camino original se pueda ver
-    // perfectamente hacia dónde va cada camino.
-    //
+        dibujarRoad(
+            roads[i]
+        );
+    }}
 
 
     // --------------------------------------------------------
-    // CAMINO SUPERIOR
+    // NODOS
     // --------------------------------------------------------
 
-    ctx.strokeStyle =
-        "#2980b9";
+    for (
+        let i = 0;
+        i < nodes.length;
+        i++
+    ) {{
 
-
-    if (
-        slope.tieneAperturaSuperior
-    ) {
-
-        // Primer tramo antes de la apertura.
-        ctx.beginPath();
-
-        ctx.moveTo(
-            slope.splitX,
-            slope.topStartY
+        dibujarNode(
+            nodes[i]
         );
-
-        ctx.lineTo(
-            slope.aperturaX1,
-            obtenerYCamino(
-                "top",
-                slope.aperturaX1
-            )
-        );
-
-        ctx.stroke();
-
-
-        // Segundo tramo después de la apertura.
-        ctx.beginPath();
-
-        ctx.moveTo(
-            slope.aperturaX2,
-            obtenerYCamino(
-                "top",
-                slope.aperturaX2
-            )
-        );
-
-        ctx.lineTo(
-            slope.branchEndX,
-            slope.topEndY
-        );
-
-        ctx.stroke();
-
-
-        // Indicador visual de la apertura.
-        let yApertura =
-            obtenerYCamino(
-                "top",
-                (
-                    slope.aperturaX1 +
-                    slope.aperturaX2
-                ) / 2
-            );
-
-
-        ctx.save();
-
-        ctx.strokeStyle =
-            "#e74c3c";
-
-        ctx.lineWidth = 5;
-
-        ctx.setLineDash([
-            10,
-            8
-        ]);
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            slope.aperturaX1,
-            yApertura + 12
-        );
-
-        ctx.lineTo(
-            slope.aperturaX2,
-            yApertura + 12
-        );
-
-        ctx.stroke();
-
-
-        ctx.restore();
-
-
-    } else {
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            slope.splitX,
-            slope.topStartY
-        );
-
-        ctx.lineTo(
-            slope.branchEndX,
-            slope.topEndY
-        );
-
-        ctx.stroke();
-    }
+    }}
 
 
     // --------------------------------------------------------
-    // CAMINO INFERIOR
-    // --------------------------------------------------------
-
-    ctx.strokeStyle =
-        "#c0392b";
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        slope.splitX,
-        slope.bottomStartY
-    );
-
-    ctx.lineTo(
-        slope.branchEndX,
-        slope.bottomEndY
-    );
-
-    ctx.stroke();
-
-
-    // ========================================================
-    // SEÑALES SI / NO
-    // ========================================================
-
-    ctx.fillStyle = "#fff";
-
-    ctx.font =
-        "bold 28px Arial";
-
-
-    ctx.fillText(
-        slope.topSign,
-        slope.splitX + 50,
-        slope.topStartY - 25
-    );
-
-
-    ctx.fillText(
-        slope.bottomSign,
-        slope.splitX + 50,
-        slope.bottomStartY - 25
-    );
-
-
-    // ========================================================
-    // PREGUNTA
-    // ========================================================
-
-    ctx.fillStyle =
-        "rgba(0,0,0,0.72)";
-
-
-    ctx.fillRect(
-        slope.splitX - 270,
-        slope.splitY - 240,
-        380,
-        55
-    );
-
-
-    ctx.fillStyle =
-        "#f1c40f";
-
-
-    ctx.font =
-        "bold 30px Arial";
-
-
-    ctx.fillText(
-        slope.pregunta,
-        slope.splitX - 250,
-        slope.splitY - 202
-    );
-
-
-    // ========================================================
-    // TURBO
-    // ========================================================
-
-    if (
-        slope.tieneTurbo
-    ) {
-
-        let turboY =
-            obtenerYCamino(
-                "main",
-                slope.turboStart
-            );
-
-
-        ctx.fillStyle =
-            "#e74c3c";
-
-
-        ctx.fillRect(
-            slope.turboStart - 40,
-            turboY - 80,
-            60,
-            60
-        );
-
-
-        ctx.fillStyle =
-            "#fff";
-
-
-        ctx.font =
-            "bold 40px Arial";
-
-
-        ctx.fillText(
-            "⚡",
-            slope.turboStart - 30,
-            turboY - 35
-        );
-
-
-        ctx.lineWidth = 14;
-
-        ctx.strokeStyle =
-            "#e74c3c";
-
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-            slope.turboStart,
-            turboY
-        );
-
-        ctx.lineTo(
-            slope.turboEnd,
-            obtenerYCamino(
-                "main",
-                slope.turboEnd
-            )
-        );
-
-        ctx.stroke();
-    }
-
-
-    // ========================================================
     // ENTIDADES
-    // ========================================================
+    // --------------------------------------------------------
 
-    entidades.forEach(
-        e => {
+    for (
+        let i = 0;
+        i < entidades.length;
+        i++
+    ) {{
 
-            if (
-                e.activo
-            ) {
-
-                dibujarSprite(
-                    ctx,
-                    e.tipo,
-                    e.x,
-                    e.y,
-                    e.w,
-                    e.h
-                );
-            }
-        }
-    );
+        const e =
+            entidades[i];
 
 
-    // ========================================================
+        if (
+            !e.activo
+        )
+            continue;
+
+
+        const road =
+            obtenerRoad(
+                e.roadId
+            );
+
+
+        if (!road)
+            continue;
+
+
+        e.y =
+            obtenerYEnRoad(
+                road,
+                e.x
+            ) -
+            e.h;
+
+
+        dibujarSprite(
+            ctx,
+            e.tipo,
+            e.x,
+            e.y,
+            e.w,
+            e.h
+        );
+    }}
+
+
+    // --------------------------------------------------------
     // DINO
-    // ========================================================
+    // --------------------------------------------------------
 
     ctx.save();
 
 
     if (
         dino.propulsado
-    ) {
+    ) {{
 
         ctx.fillStyle =
-            "rgba(46, 204, 113, 0.5)";
+            "rgba(46,204,113,0.5)";
 
 
         ctx.fillRect(
@@ -2475,7 +3228,7 @@ function dibujarEscena() {
             80,
             dino.h
         );
-    }
+    }}
 
 
     dibujarSprite(
@@ -2492,7 +3245,193 @@ function dibujarEscena() {
 
 
     ctx.restore();
-}
+}}
+
+
+// ============================================================
+// LOOP
+// ============================================================
+
+function loop() {{
+
+    if (
+        !juegoActivo
+    ) {{
+        return;
+    }}
+
+
+    // --------------------------------------------------------
+    // GENERAR MUNDO ANTES DE AVANZAR
+    // --------------------------------------------------------
+
+    mantenerMundoPorDelante();
+
+
+    // --------------------------------------------------------
+    // VELOCIDAD
+    // --------------------------------------------------------
+
+    const velocidad =
+        obtenerVelocidad();
+
+
+    // --------------------------------------------------------
+    // MOVIMIENTO HORIZONTAL
+    // --------------------------------------------------------
+
+    dino.x +=
+        velocidad;
+
+
+    // --------------------------------------------------------
+    // FÍSICA
+    // --------------------------------------------------------
+
+    actualizarDino();
+
+
+    // --------------------------------------------------------
+    // ENTIDADES
+    // --------------------------------------------------------
+
+    actualizarEntidades(
+        velocidad
+    );
+
+
+    // --------------------------------------------------------
+    // MUNDO
+    // --------------------------------------------------------
+
+    mantenerMundoPorDelante();
+
+    limpiarMundo();
+
+
+    // --------------------------------------------------------
+    // CÁMARA
+    // --------------------------------------------------------
+
+    actualizarCamara();
+
+
+    // --------------------------------------------------------
+    // DIBUJAR
+    // --------------------------------------------------------
+
+    dibujarEscena();
+
+
+    frameId =
+        requestAnimationFrame(
+            loop
+        );
+}}
+
+
+// ============================================================
+// INICIAR
+// ============================================================
+
+function iniciarJuego() {{
+
+    if (
+        frameId !== null
+    ) {{
+
+        cancelAnimationFrame(
+            frameId
+        );
+
+        frameId = null;
+    }}
+
+
+    juegoActivo =
+        true;
+
+
+    nivel =
+        1;
+
+
+    difDinamica =
+        0;
+
+
+    cuestasCompletadas =
+        0;
+
+
+    fAcu =
+        0;
+
+
+    pedosAcu =
+        0;
+
+
+    sidras =
+        0;
+
+
+    cameraY =
+        0;
+
+
+    dino = {{
+
+        x: 100,
+
+        y: 260,
+
+        w: 40,
+
+        h: 40,
+
+        vy: 0,
+
+        enAire: false,
+
+        propulsado: false,
+
+        distPropulsion: 0,
+
+        roadId: null,
+
+        parentNodeId: null
+    }};
+
+
+    document.getElementById(
+        "game-over"
+    ).style.display =
+        "none";
+
+
+    crearMundoInicial();
+
+
+    const roadInicial =
+        obtenerRoad(
+            dino.roadId
+        );
+
+
+    dino.y =
+        obtenerYEnRoad(
+            roadInicial,
+            dino.x
+        ) -
+        dino.h;
+
+
+    actualizarUI();
+
+
+    loop();
+}}
 
 
 // ============================================================
@@ -2500,10 +3439,10 @@ function dibujarEscena() {
 // ============================================================
 
 window.reiniciarJuego =
-    function () {
+    function() {{
 
         iniciarJuego();
-    };
+    }};
 
 
 // ============================================================
@@ -2518,25 +3457,6 @@ iniciarJuego();
 </html>
 """
 
-
-# ============================================================
-# INSERTAR IMÁGENES
-# ============================================================
-
-html_juego = (
-    html_juego
-    .replace("__DINO__", imagenes["dino"])
-    .replace("__OBS_FIJO__", imagenes["obs_fijo"])
-    .replace("__OBS_LENTO__", imagenes["obs_lento"])
-    .replace("__OBS_RAPIDO__", imagenes["obs_rapido"])
-    .replace("__FABADA__", imagenes["fabada"])
-    .replace("__SIDRA__", imagenes["sidra"])
-)
-
-
-# ============================================================
-# MOSTRAR JUEGO
-# ============================================================
 
 components.html(
     html_juego,
