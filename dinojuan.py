@@ -5,53 +5,56 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="DinoJuan - Minijuego", layout="wide")
 
-# ==========================================
-# GESTOR DE SPRITES CON FALLBACK AUTOMÁTICO
-# ==========================================
-def obtener_imagen_base64(nombre_archivo, color_hex_fallback):
+def obtener_imagen_base64(nombre_base, color_hex_fallback):
     folder = "img"
-    ruta_especifica = os.path.join(folder, nombre_archivo)
+    extensiones = [".png", ".jpg", ".jpeg"]
     
-    if os.path.exists(ruta_especifica):
-        with open(ruta_especifica, "rb") as f:
-            return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+    # Buscar si existe el archivo con alguna de las extensiones permitidas
+    for ext in extensiones:
+        ruta_especifica = os.path.join(folder, nombre_base + ext)
+        if os.path.exists(ruta_especifica):
+            mime = "image/jpeg" if ext in [".jpg", ".jpeg"] else "image/png"
+            with open(ruta_especifica, "rb") as f:
+                return f"data:{mime};base64,{base64.b64encode(f.read()).decode()}"
             
+    # Fallback genérico: busca cualquier imagen válida en la carpeta si falta la específica
     if os.path.exists(folder):
-        pngs = [f for f in os.listdir(folder) if f.endswith(".png")]
-        if pngs:
-            with open(os.path.join(folder, pngs[0]), "rb") as f:
-                return f"data:image/png;base64,{base64.b64encode(f.read()).decode()}"
+        for f_name in os.listdir(folder):
+            if f_name.lower().endswith(tuple(extensiones)):
+                ruta = os.path.join(folder, f_name)
+                ext = os.path.splitext(f_name)[1].lower()
+                mime = "image/jpeg" if ext in [".jpg", ".jpeg"] else "image/png"
+                with open(ruta, "rb") as f:
+                    return f"data:{mime};base64,{base64.b64encode(f.read()).decode()}"
                 
     return f"COLOR:{color_hex_fallback}"
 
+# Llamamos a la función pasando solo el nombre base (sin extensión)
 imagenes = {
-    "dino": obtener_imagen_base64("oviedo_dino.png", "#2ecc71"),
-    "obs_fijo": obtener_imagen_base64("ubres_dino.png", "#e74c3c"),
-    "obs_lento": obtener_imagen_base64("carne_dino.png", "#e67e22"),
-    "obs_rapido": obtener_imagen_base64("mirete_dino.png", "#8e44ad"),
-    "obs_extra": obtener_imagen_base64("pwc_dino.png", "#c0392b"),
-    "fabada": obtener_imagen_base64("fabada.png", "#d35400"),
-    "sidra": obtener_imagen_base64("sidra.png", "#f1c40f")
+    "dino": obtener_imagen_base64("oviedo_dino", "#2ecc71"),
+    "obs_fijo": obtener_imagen_base64("ubres_dino", "#e74c3c"),
+    "obs_lento": obtener_imagen_base64("carne_dino", "#e67e22"),
+    "obs_rapido": obtener_imagen_base64("mirete_dino", "#8e44ad"),
+    "obs_extra": obtener_imagen_base64("pwc_dino", "#c0392b"),
+    "fabada": obtener_imagen_base64("fabada", "#d35400"),
+    "sidra": obtener_imagen_base64("sidra", "#f1c40f")
 }
 
-# ==========================================
-# CÓDIGO HTML Y JAVASCRIPT DEL MINIJUEGO
-# ==========================================
 html_juego = f'''
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-    body {{ margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #222; }}
+    body {{ margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #222; -webkit-user-select: none; user-select: none; }}
     #game-container {{ position: relative; width: 100%; max-width: 900px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }}
-    canvas {{ display: block; width: 100%; height: 500px; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); }}
+    canvas {{ display: block; width: 100%; height: 500px; background: linear-gradient(to bottom, #87CEEB, #E0F6FF); cursor: pointer; }}
     #ui-layer {{ position: absolute; top: 10px; left: 15px; color: #333; font-weight: bold; font-size: 18px; pointer-events: none; text-shadow: 1px 1px 2px white; z-index: 10; }}
     #game-over {{ display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 30px; border-radius: 15px; text-align: center; border: 3px solid #f1c40f; z-index: 20; }}
     .btn {{ background: #f1c40f; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; font-size: 16px; }}
     #controls {{ position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; z-index: 10; }}
-    .ctrl-btn {{ pointer-events: auto; background: rgba(255,255,255,0.7); border: 2px solid #333; border-radius: 50%; width: 60px; height: 60px; font-size: 24px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; }}
-    #btn-pedo {{ border-radius: 10px; width: auto; padding: 0 20px; background: rgba(211, 84, 0, 0.8); color: white; border-color: #e67e22; }}
+    .ctrl-btn {{ pointer-events: auto; background: rgba(255,255,255,0.8); border: 2px solid #333; border-radius: 12px; padding: 12px 25px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }}
+    #btn-pedo {{ background: rgba(211, 84, 0, 0.9); color: white; border-color: #e67e22; }}
 </style>
 </head>
 <body>
@@ -64,15 +67,14 @@ html_juego = f'''
     <canvas id="gameCanvas"></canvas>
     
     <div id="controls">
-        <div class="ctrl-btn" id="btn-jump">⬆️</div>
-        <div class="ctrl-btn" id="btn-drop">⬇️</div>
+        <div class="ctrl-btn" id="btn-drop">⬇️ CAER / ABAJO</div>
         <div class="ctrl-btn" id="btn-pedo">💨 SOLTAR PEDO</div>
     </div>
 
     <div id="game-over">
         <h1 style="margin-top:0;">💥 GAME OVER</h1>
         <h2>🍏 Sidras Totales: <span id="final-sidras" style="color:#f1c40f;">0</span></h2>
-        <p>Has tropezado con un obstáculo o caído al vacío.</p>
+        <p>Has tropezado con un obstáculo.</p>
         <button class="btn" onclick="reiniciarJuego()">Volver a Jugar</button>
     </div>
 </div>
@@ -116,16 +118,14 @@ html_juego = f'''
         }}
     }}
 
-    // Estado del Juego
     let juegoActivo = true;
     let cameraY = 0;
     let frameId;
     
-    // Progresión Suavizada
     let cuestasCompletadas = 0;
     let nivel = 1;
     let difDinamica = 0; 
-    let baseVelocidad = 3.5; // MUCHO MÁS FÁCIL AL INICIO
+    let baseVelocidad = 3.5;
     let fAcu = 0; 
     let pedosAcu = 0;
     let sidras = 0;
@@ -165,29 +165,23 @@ html_juego = f'''
 
     function generarCuesta(inicioX, inicioY) {{
         let nv = Math.max(1, nivel + difDinamica);
-        
-        // CUESTAS MENOS PRONUNCIADAS A MENOR DIFICULTAD
-        let maxAngleDeg = Math.min(5 + (nv * 3), 30); // Empieza en 8 grados, tope en 30
+        let maxAngleDeg = Math.min(4 + (nv * 2.5), 25);
         let anguloDeg = (Math.random() * maxAngleDeg * 2) - maxAngleDeg;
         let anguloRad = anguloDeg * Math.PI / 180;
         
-        // CUESTAS MÁS LARGAS
-        let len = 2500 + Math.random() * 1500; 
+        let len = 2800 + Math.random() * 1200; 
         let yFinal = inicioY + Math.tan(anguloRad) * len;
         
         let preg = generarPregunta(nv);
         let topSign = Math.random() > 0.5 ? "SI" : "NO";
-        
         let tieneTurbo = Math.random() < 0.35;
         
-        // HUECOS MÁS PEQUEÑOS Y SALTOS MÁS ASEQUIBLES
         slope = {{
             x1: inicioX, y1: inicioY,
             x2: inicioX + len, y2: yFinal,
             angle: anguloRad,
-            gapEnd: inicioX + len + 150, // Hueco más corto (antes 250)
-            topY: yFinal - 100,          // Menos altura para llegar (antes -130)
-            bottomY: yFinal + 100,
+            topY: yFinal - 120,
+            bottomY: yFinal + 120,
             pregunta: preg.texto,
             correcta: preg.correcta,
             topSign: topSign,
@@ -235,21 +229,31 @@ html_juego = f'''
         }}
     }}
 
-    // SALTO MÁS FUERTE PARA LLEGAR FÁCIL ARRIBA
-    function salto() {{ if(!dino.enAire && !dino.propulsado) {{ dino.vy = -16; dino.enAire = true; }} }}
-    function caidaRapida() {{ if(dino.enAire && !dino.propulsado) {{ dino.vy += 8; }} }}
+    function salto() {{ 
+        if(!dino.propulsado) {{ 
+            dino.vy = -15; 
+            dino.enAire = true; 
+        }} 
+    }}
+    
+    function caidaRapida() {{ 
+        if(dino.enAire && !dino.propulsado) {{ 
+            dino.vy += 10; 
+        }} 
+    }}
 
-    document.getElementById('btn-jump').addEventListener('touchstart', (e)=> {{ e.preventDefault(); salto(); }});
-    document.getElementById('btn-jump').addEventListener('mousedown', salto);
+    canvas.addEventListener('touchstart', (e) => {{ e.preventDefault(); salto(); }});
+    canvas.addEventListener('click', () => {{ salto(); }});
+
     document.getElementById('btn-drop').addEventListener('touchstart', (e)=> {{ e.preventDefault(); caidaRapida(); }});
-    document.getElementById('btn-drop').addEventListener('mousedown', caidaRapida);
+    document.getElementById('btn-drop').addEventListener('mousedown', (e)=> {{ e.stopPropagation(); caidaRapida(); }});
     document.getElementById('btn-pedo').addEventListener('touchstart', (e)=> {{ e.preventDefault(); activarPropulsion(); }});
-    document.getElementById('btn-pedo').addEventListener('mousedown', activarPropulsion);
+    document.getElementById('btn-pedo').addEventListener('mousedown', (e)=> {{ e.stopPropagation(); activarPropulsion(); }});
 
     document.addEventListener('keydown', (e) => {{
-        if(e.code === 'ArrowUp') salto();
+        if(e.code === 'ArrowUp' || e.code === 'Space') salto();
         if(e.code === 'ArrowDown') caidaRapida();
-        if(e.code === 'Space' || e.code === 'KeyF') activarPropulsion();
+        if(e.code === 'KeyF') activarPropulsion();
     }});
 
     function actualizarUI() {{
@@ -260,15 +264,8 @@ html_juego = f'''
         document.getElementById('dif').innerText = difDinamica.toFixed(1);
     }}
 
-    function procesarCruceBifurcacion() {{
-        let errYTop = Math.abs(dino.y - slope.topY);
-        let errYBot = Math.abs(dino.y - slope.bottomY);
-        
-        let pathTomado = errYTop < errYBot ? "top" : "bottom";
-        let signTomado = pathTomado === "top" ? slope.topSign : slope.bottomSign;
-        let yTomado = pathTomado === "top" ? slope.topY : slope.bottomY;
-
-        dino.y = yTomado - dino.h;
+    function procesarCruceBifurcacion(ySeleccionada, signTomado) {{
+        dino.y = ySeleccionada - dino.h;
         dino.enAire = false; dino.vy = 0;
 
         if (signTomado === slope.correcta) {{
@@ -280,7 +277,7 @@ html_juego = f'''
         cuestasCompletadas++;
         if (cuestasCompletadas % 10 === 0) nivel++;
         
-        generarCuesta(slope.gapEnd, yTomado);
+        generarCuesta(slope.x2, ySeleccionada);
         actualizarUI();
     }}
 
@@ -291,7 +288,6 @@ html_juego = f'''
     function loop() {{
         if(!juegoActivo) return;
         
-        // VELOCIDAD ESCALADA SUAVEMENTE
         let velTotal = baseVelocidad + (nivel * 0.4) + (difDinamica * 0.2);
         
         if(slope.tieneTurbo && dino.x > slope.turboStart && dino.x < slope.turboEnd && !dino.propulsado) {{
@@ -306,30 +302,31 @@ html_juego = f'''
 
         dino.x += velTotal;
 
-        if (dino.x >= slope.x1 && dino.x < slope.x2) {{
+        if (dino.x < slope.x2) {{
             let ySuelo = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
             if (!dino.enAire) {{
                 dino.y = ySuelo - dino.h;
             }} else {{
                 dino.y += dino.vy;
-                dino.vy += 0.7; // Gravedad ligeramente más baja para saltos flotantes
+                dino.vy += 0.65; 
                 if (dino.y + dino.h >= ySuelo && dino.vy > 0) {{
                     dino.y = ySuelo - dino.h;
                     dino.enAire = false; dino.vy = 0;
                 }}
             }}
-        }} else if (dino.x >= slope.x2 && dino.x < slope.gapEnd) {{
-            dino.enAire = true;
+        }} else {{
             if(dino.propulsado) {{
                 let targetY = (slope.correcta === slope.topSign) ? slope.topY : slope.bottomY;
-                dino.y += ((targetY - dino.h) - dino.y) * 0.2;
-                dino.vy = 0;
+                let sign = slope.correcta;
+                procesarCruceBifurcacion(targetY, sign);
             }} else {{
-                dino.y += dino.vy;
-                dino.vy += 0.7;
+                let mediaY = (slope.topY + slope.bottomY) / 2;
+                let pathTomado = dino.y < mediaY ? "top" : "bottom";
+                let yTomado = pathTomado === "top" ? slope.topY : slope.bottomY;
+                let signTomado = pathTomado === "top" ? slope.topSign : slope.bottomSign;
+                
+                procesarCruceBifurcacion(yTomado, signTomado);
             }}
-        }} else if (dino.x >= slope.gapEnd) {{
-            procesarCruceBifurcacion();
         }}
 
         entidades.forEach(e => {{
@@ -364,18 +361,9 @@ html_juego = f'''
             }}
         }});
 
-        // CÁMARA ESTABILIZADA: SE FIJA EN EL SUELO, NO EN LOS SALTOS DEL DINO
-        let refY;
-        if (dino.x < slope.x2) {{
-            // Si está en la cuesta, sigue la inclinación de la cuesta (estable)
-            refY = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
-        }} else {{
-            // En la zona de salto/bifurcación, promedia hacia el siguiente camino
-            refY = (slope.topY + slope.bottomY) / 2; 
-        }}
-        
+        let refY = slope.y1 + Math.tan(slope.angle) * (dino.x - slope.x1);
         let targetCamY = canvas.height * 0.6 - refY;
-        cameraY += (targetCamY - cameraY) * 0.08; // Transición más suave
+        cameraY += (targetCamY - cameraY) * 0.1;
 
         dibujarEscena();
         if(juegoActivo) frameId = requestAnimationFrame(loop);
@@ -401,22 +389,21 @@ html_juego = f'''
         ctx.stroke();
 
         ctx.strokeStyle = '#2980b9'; 
-        ctx.beginPath(); ctx.moveTo(slope.gapEnd, slope.topY); ctx.lineTo(slope.gapEnd + 2500, slope.topY + Math.tan(slope.angle)*2500); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(slope.x2, slope.topY); ctx.lineTo(slope.x2 + 3000, slope.topY + Math.tan(slope.angle)*3000); ctx.stroke();
         
         ctx.strokeStyle = '#c0392b'; 
-        ctx.beginPath(); ctx.moveTo(slope.gapEnd, slope.bottomY); ctx.lineTo(slope.gapEnd + 2500, slope.bottomY + Math.tan(slope.angle)*2500); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(slope.x2, slope.bottomY); ctx.lineTo(slope.x2 + 3000, slope.bottomY + Math.tan(slope.angle)*3000); ctx.stroke();
 
         ctx.fillStyle = "#fff";
         ctx.font = "bold 28px Arial";
-        ctx.fillText(slope.topSign, slope.gapEnd + 40, slope.topY - 25);
-        ctx.fillText(slope.bottomSign, slope.gapEnd + 40, slope.bottomY - 25);
+        ctx.fillText(slope.topSign, slope.x2 + 40, slope.topY - 25);
+        ctx.fillText(slope.bottomSign, slope.x2 + 40, slope.bottomY - 25);
 
-        // PREGUNTA REPOSICIONADA PARA MÁXIMA VISIBILIDAD
         ctx.fillStyle = "rgba(0,0,0,0.7)";
-        ctx.fillRect(slope.x2 - 150, slope.y2 - 280, 300, 50);
+        ctx.fillRect(slope.x2 - 250, slope.y2 - 250, 300, 50);
         ctx.fillStyle = "#f1c40f";
         ctx.font = "bold 32px Arial";
-        ctx.fillText(slope.pregunta, slope.x2 - 130, slope.y2 - 245);
+        ctx.fillText(slope.pregunta, slope.x2 - 230, slope.y2 - 215);
 
         if (slope.tieneTurbo) {{
             ctx.fillStyle = "#e74c3c";
