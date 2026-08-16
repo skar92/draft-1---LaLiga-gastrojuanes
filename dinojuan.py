@@ -92,41 +92,46 @@ html_juego = f'''
     }};
 
     const imagenesCargadas = {{}};
+    
+    // CARGAR Y LIMPIAR EL FONDO BLANCO UNA SOLA VEZ AL INICIAR
     for (let key in IMG_DATA) {{
         if (!IMG_DATA[key].startsWith("COLOR:")) {{
             let img = new Image();
             img.src = IMG_DATA[key];
+            img.onload = function() {{
+                let tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.naturalWidth;
+                tempCanvas.height = img.naturalHeight;
+                let tCtx = tempCanvas.getContext('2d');
+                tCtx.drawImage(img, 0, 0);
+                try {{
+                    let imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                    let data = imgData.data;
+                    for (let i = 0; i < data.length; i += 4) {{
+                        let r = data[i], g = data[i+1], b = data[i+2];
+                        if (r > 230 && g > 230 && b > 230) {{
+                            data[i+3] = 0;
+                        }}
+                    }}
+                    tCtx.putImageData(imgData, 0, 0);
+                    imagenesCargadas[key] = tempCanvas;
+                }} catch(e) {{
+                    imagenesCargadas[key] = img;
+                }}
+            }};
             imagenesCargadas[key] = img;
         }} else {{
             imagenesCargadas[key] = IMG_DATA[key].split(":")[1];
         }}
     }}
 
-    // FUNCIÓN PARA QUITAR EL FONDO BLANCO DE LOS SPRITES AUTOMÁTICAMENTE
     function dibujarSprite(ctx, key, x, y, w, h) {{
         let obj = imagenesCargadas[key];
         if (typeof obj === "string") {{
             ctx.fillStyle = obj;
             ctx.fillRect(x, y, w, h);
-        }} else if (obj && obj.complete && obj.naturalWidth > 0) {{
-            // Crear canvas temporal para procesar transparencia si tiene fondo blanco
-            let tempCanvas = document.createElement('canvas');
-            tempCanvas.width = obj.naturalWidth;
-            tempCanvas.height = obj.naturalHeight;
-            let tCtx = tempCanvas.getContext('2d');
-            tCtx.drawImage(obj, 0, 0);
-            
-            let imgData = tCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-            let data = imgData.data;
-            for (let i = 0; i < data.length; i += 4) {{
-                let r = data[i], g = data[i+1], b = data[i+2];
-                // Si el píxel es blanco o muy cercano a blanco, hacerlo transparente
-                if (r > 230 && g > 230 && b > 230) {{
-                    data[i+3] = 0;
-                }}
-            }}
-            tCtx.putImageData(imgData, 0, 0);
-            ctx.drawImage(tempCanvas, x, y, w, h);
+        }} else if (obj) {{
+            ctx.drawImage(obj, x, y, w, h);
         }} else {{
             ctx.fillStyle = "#000";
             ctx.fillRect(x, y, w, h);
@@ -153,7 +158,6 @@ html_juego = f'''
         propulsado: false, distPropulsion: 0
     }};
 
-    // ESTRUCTURA DE PISTA CONTINUA (MÚLTIPLES TRAMOS DINÁMICOS)
     let tramos = [];
 
     function generarPregunta(nivelReal) {{
@@ -179,7 +183,7 @@ html_juego = f'''
 
     function crearTramo(inicioX, inicioY) {{
         let nv = Math.max(1, nivel + difDinamica);
-        let maxAngleDeg = Math.min(3 + (nv * 2), 18); // Cuestas suaves para que se vea todo bien
+        let maxAngleDeg = Math.min(3 + (nv * 2), 18);
         let anguloDeg = (Math.random() * maxAngleDeg * 2) - maxAngleDeg;
         let anguloRad = anguloDeg * Math.PI / 180;
         
@@ -214,7 +218,7 @@ html_juego = f'''
             topY: yFinal - 100,
             bottomY: yFinal + 100,
             pregunta: preg.texto,
-            correcta: esCorrecta ? "SI" : "NO", // Corregido para sincronizar con la lógica
+            correcta: preg.correcta,
             topSign: topSign,
             bottomSign: topSign === "SI" ? "NO" : "SI",
             tieneTurbo: tieneTurbo,
@@ -228,7 +232,6 @@ html_juego = f'''
         tramos = [];
         let primerTramo = crearTramo(0, 300);
         tramos.push(primerTramo);
-        // Generar segundo tramo conectado de manera dinámica
         let segundoTramo = crearTramo(primerTramo.x2, primerTramo.y2);
         tramos.push(segundoTramo);
     }}
@@ -253,7 +256,6 @@ html_juego = f'''
         }}
     }}
 
-    // SALTO PRINCIPAL Y DOBLE SALTO MUY PEQUEÑO
     function salto() {{ 
         if(dino.propulsado) return;
         if(!dino.enAire) {{ 
@@ -261,7 +263,6 @@ html_juego = f'''
             dino.enAire = true; 
             dino.saltosRealizados = 1;
         }} else if (dino.saltosRealizados === 1) {{
-            // Doble salto pequeño
             dino.vy = -7;
             dino.saltosRealizados = 2;
         }}
@@ -318,14 +319,13 @@ html_juego = f'''
 
         dino.x += velTotal;
 
-        // Físicas de suelo / aire en el tramo actual
         let ySuelo = tramoActual.y1 + Math.tan(tramoActual.angle) * (dino.x - tramoActual.x1);
         
         if (!dino.enAire) {{
             dino.y = ySuelo - dino.h;
         }} else {{
             dino.y += dino.vy;
-            dino.vy += 0.6; // Gravedad equilibrada
+            dino.vy += 0.6;
             if (dino.y + dino.h >= ySuelo && dino.vy > 0) {{
                 dino.y = ySuelo - dino.h;
                 dino.enAire = false;
@@ -334,9 +334,7 @@ html_juego = f'''
             }}
         }}
 
-        // GESTIÓN DINÁMICA DE TRAMOS (INFINITO SIN CORTES)
         if (dino.x > tramoActual.x2 - 500) {{
-            // Si nos acercamos al final del tramo actual, aseguramos que exista el siguiente
             if (tramos.length < 3) {{
                 let ultimo = tramos[tramos.length - 1];
                 let nuevo = crearTramo(ultimo.x2, ultimo.y2);
@@ -344,12 +342,10 @@ html_juego = f'''
             }}
         }}
 
-        // Limpiar tramos viejos que ya quedaron atrás
         if (tramos.length > 3) {{
             tramos.shift();
         }}
 
-        // Colisiones con entidades de todos los tramos activos
         tramos.forEach(t => {{
             t.entidades.forEach(e => {{
                 if(!e.activo) return;
@@ -384,7 +380,6 @@ html_juego = f'''
             }});
         }});
 
-        // CÁMARA SUAVE QUE SIGUE AL DINO SIN PERDER DE VISTA EL FONDO
         let targetCamY = canvas.height * 0.6 - dino.y;
         cameraY += (targetCamY - cameraY) * 0.1;
 
@@ -403,7 +398,6 @@ html_juego = f'''
         ctx.save();
         ctx.translate(200 - dino.x, cameraY);
 
-        // Dibujar todos los tramos activos de forma fluida
         tramos.forEach(t => {{
             ctx.lineWidth = 14;
             ctx.strokeStyle = '#27ae60';
@@ -413,7 +407,6 @@ html_juego = f'''
             ctx.lineTo(t.x2, t.y2);
             ctx.stroke();
 
-            // Pregunta visible sobre la cuesta
             ctx.fillStyle = "rgba(0,0,0,0.7)";
             ctx.fillRect(t.x1 + 300, t.y1 - 220, 260, 45);
             ctx.fillStyle = "#f1c40f";
