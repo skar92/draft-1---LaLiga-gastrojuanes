@@ -525,7 +525,7 @@ porra_goleadores = {
     "Aubameyang": {
         "Jugador": "Vecina",
         "Equipo": "Deportivo",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Toni Martinez": {
