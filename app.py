@@ -460,7 +460,7 @@ stats_equipos = {
 
     "Athletic Club": {"G": 0, "E": 0, "P": 0},
     
-    "Elche": {"G": 0, "E": 0, "P": 0},
+    "Elche": {"G": 0, "E": 1, "P": 0},
     
     "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
     
@@ -488,7 +488,7 @@ stats_equipos = {
     
     "Espanyol": {"G": 1, "E": 0, "P": 0},
     
-    "Deportivo": {"G": 0, "E": 0, "P": 0},
+    "Deportivo": {"G": 0, "E": 1, "P": 0},
 }
 
 
