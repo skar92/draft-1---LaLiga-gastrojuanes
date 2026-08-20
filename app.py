@@ -464,7 +464,7 @@ stats_equipos = {
     
     "Real Betis Balompie": {"G": 0, "E": 0, "P": 0},
     
-    "Malaga": {"G": 0, "E": 0, "P": 0},
+    "Malaga": {"G": 0, "E": 0, "P": 1},
 
     "Real Sociedad": {"G": 0, "E": 0, "P": 0},
     
