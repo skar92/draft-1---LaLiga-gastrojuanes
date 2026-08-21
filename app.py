@@ -476,11 +476,11 @@ stats_equipos = {
     
     "Valencia": {"G": 0, "E": 0, "P": 0},
     
-    "Alavés": {"G": 1, "E": 0, "P": 0},
+    "Alavés": {"G": 1, "E": 1, "P": 0},
     
     "Getafe": {"G": 0, "E": 0, "P": 1},
     
-    "Rayo Vallecano": {"G": 0, "E": 0, "P": 1},
+    "Rayo Vallecano": {"G": 0, "E": 1, "P": 1},
     
     "Sevilla": {"G": 1, "E": 0, "P": 0},
     
