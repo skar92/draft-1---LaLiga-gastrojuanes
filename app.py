@@ -458,7 +458,7 @@ asig_equipos = {
 
 stats_equipos = {
 
-    "Athletic Club": {"G": 0, "E": 0, "P": 0},
+    "Athletic Club": {"G": 0, "E": 0, "P": 1},
     
     "Elche": {"G": 0, "E": 1, "P": 0},
     
@@ -470,11 +470,11 @@ stats_equipos = {
     
     "Racing": {"G": 0, "E": 1, "P": 0},
     
-    "Celta": {"G": 0, "E": 0, "P": 0},
+    "Celta": {"G": 0, "E": 1, "P": 0},
 
     "Levante": {"G": 0, "E": 0, "P": 1},
     
-    "Valencia": {"G": 0, "E": 0, "P": 0},
+    "Valencia": {"G": 0, "E": 1, "P": 0},
     
     "Alavés": {"G": 1, "E": 1, "P": 0},
     
@@ -482,11 +482,11 @@ stats_equipos = {
     
     "Rayo Vallecano": {"G": 0, "E": 1, "P": 1},
     
-    "Sevilla": {"G": 1, "E": 0, "P": 0},
+    "Sevilla": {"G": 2, "E": 0, "P": 0},
     
     "Osasuna": {"G": 0, "E": 0, "P": 0},
     
-    "Espanyol": {"G": 1, "E": 0, "P": 0},
+    "Espanyol": {"G": 1, "E": 0, "P": 1},
     
     "Deportivo": {"G": 0, "E": 1, "P": 0},
 }
