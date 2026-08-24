@@ -460,7 +460,7 @@ stats_equipos = {
 
     "Athletic Club": {"G": 0, "E": 0, "P": 1},
     
-    "Elche": {"G": 0, "E": 1, "P": 0},
+    "Elche": {"G": 0, "E": 1, "P": 1},
     
     "Real Betis Balompie": {"G": 1, "E": 0, "P": 0},
     
@@ -468,7 +468,7 @@ stats_equipos = {
 
     "Real Sociedad": {"G": 0, "E": 0, "P": 1},
     
-    "Racing": {"G": 0, "E": 1, "P": 0},
+    "Racing": {"G": 0, "E": 1, "P": 1},
     
     "Celta": {"G": 0, "E": 1, "P": 0},
 
@@ -478,7 +478,7 @@ stats_equipos = {
     
     "Alavés": {"G": 1, "E": 1, "P": 0},
     
-    "Getafe": {"G": 0, "E": 0, "P": 1},
+    "Getafe": {"G": 1, "E": 0, "P": 1},
     
     "Rayo Vallecano": {"G": 0, "E": 1, "P": 1},
     
@@ -549,7 +549,7 @@ porra_goleadores = {
     "Mikautadze": {
         "Jugador": "Miguel Ángel",
         "Equipo": "Villarreal",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Sancet": {
@@ -587,7 +587,7 @@ porra_goleadores = {
     "Enes Unal": {
         "Jugador": "Telenti",
         "Equipo": "Getafe",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Hugo Duro": {
