@@ -464,7 +464,7 @@ stats_equipos = {
     
     "Real Betis Balompie": {"G": 1, "E": 0, "P": 0},
     
-    "Malaga": {"G": 0, "E": 0, "P": 1},
+    "Malaga": {"G": 0, "E": 1, "P": 1},
 
     "Real Sociedad": {"G": 0, "E": 0, "P": 1},
     
@@ -488,7 +488,7 @@ stats_equipos = {
     
     "Espanyol": {"G": 1, "E": 0, "P": 1},
     
-    "Deportivo": {"G": 0, "E": 1, "P": 0},
+    "Deportivo": {"G": 0, "E": 2, "P": 0},
 }
 
 
@@ -525,7 +525,7 @@ porra_goleadores = {
     "Aubameyang": {
         "Jugador": "Vecina",
         "Equipo": "Deportivo",
-        "Goles": 1
+        "Goles": 2
     },
 
     "Toni Martinez": {
