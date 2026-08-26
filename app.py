@@ -462,7 +462,7 @@ stats_equipos = {
     
     "Elche": {"G": 0, "E": 1, "P": 1},
     
-    "Real Betis Balompie": {"G": 1, "E": 0, "P": 0},
+    "Real Betis Balompie": {"G": 2, "E": 0, "P": 0},
     
     "Malaga": {"G": 0, "E": 1, "P": 1},
 
@@ -474,7 +474,7 @@ stats_equipos = {
 
     "Levante": {"G": 0, "E": 1, "P": 1},
     
-    "Valencia": {"G": 0, "E": 1, "P": 0},
+    "Valencia": {"G": 0, "E": 1, "P": 1},
     
     "Alavés": {"G": 1, "E": 1, "P": 0},
     
