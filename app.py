@@ -466,7 +466,7 @@ stats_equipos = {
     
     "Malaga": {"G": 0, "E": 1, "P": 1},
 
-    "Real Sociedad": {"G": 0, "E": 0, "P": 1},
+    "Real Sociedad": {"G": 0, "E": 0, "P": 2},
     
     "Racing": {"G": 0, "E": 1, "P": 1},
     
