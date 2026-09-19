@@ -479,11 +479,11 @@ stats_equipos = {
     
     "Getafe": {"G": 1, "E": 2, "P": 3},
     
-    "Rayo Vallecano": {"G": 2, "E": 1, "P": 3},
+    "Rayo Vallecano": {"G": 2, "E": 2, "P": 3},
     
     "Sevilla": {"G": 4, "E": 1, "P": 1},
     
-    "Osasuna": {"G": 2, "E": 1, "P": 3},
+    "Osasuna": {"G": 2, "E": 2, "P": 3},
     
     "Espanyol": {"G": 2, "E": 1, "P": 4},
     
@@ -537,7 +537,7 @@ porra_goleadores = {
     "Budimir": {
         "Jugador": "Mírete",
         "Equipo": "Osasuna",
-        "Goles": 4
+        "Goles": 5
     },
 
     "Ayoze": {
@@ -818,7 +818,7 @@ for jug in asig_equipos.keys():
 
     total = (
         pts_eqs
-        + goles_jugador
+        + 2* goles_jugador
         + extra
     )
 
