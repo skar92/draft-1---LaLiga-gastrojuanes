@@ -456,40 +456,43 @@ asig_equipos = {
 # ESTADÍSTICAS DE LOS EQUIPOS, ganados, empatados, perdidos
 # ==============================================================================
 
+Aquí tienes el diccionario `stats_equipos` actualizado con los datos reales de victorias (**G**), empates (**E**) y derrotas (**P**) correspondientes a los equipos indicados de la temporada actual de La Liga:
+
+
 stats_equipos = {
+    "Athletic Club": {"G": 2, "E": 1, "P": 2},
+    
+    "Elche": {"G": 1, "E": 2, "P": 4},
+    
+    "Real Betis Balompie": {"G": 5, "E": 0, "P": 1},
+    
+    "Malaga": {"G": 0, "E": 3, "P": 3},
 
-    "Athletic Club": {"G": 0, "E": 0, "P": 1},
+    "Real Sociedad": {"G": 2, "E": 1, "P": 3},
     
-    "Elche": {"G": 0, "E": 1, "P": 1},
+    "Racing": {"G": 2, "E": 1, "P": 3},
     
-    "Real Betis Balompie": {"G": 2, "E": 0, "P": 0},
-    
-    "Malaga": {"G": 0, "E": 1, "P": 1},
+    "Celta": {"G": 0, "E": 4, "P": 2},
 
-    "Real Sociedad": {"G": 0, "E": 0, "P": 2},
+    "Levante": {"G": 1, "E": 2, "P": 2},
     
-    "Racing": {"G": 0, "E": 1, "P": 1},
+    "Valencia": {"G": 1, "E": 1, "P": 4},
     
-    "Celta": {"G": 0, "E": 1, "P": 0},
-
-    "Levante": {"G": 0, "E": 1, "P": 1},
+    "Alavés": {"G": 3, "E": 1, "P": 2},
     
-    "Valencia": {"G": 0, "E": 1, "P": 1},
+    "Getafe": {"G": 1, "E": 2, "P": 3},
     
-    "Alavés": {"G": 1, "E": 1, "P": 0},
+    "Rayo Vallecano": {"G": 2, "E": 1, "P": 3},
     
-    "Getafe": {"G": 1, "E": 0, "P": 1},
+    "Sevilla": {"G": 4, "E": 1, "P": 1},
     
-    "Rayo Vallecano": {"G": 0, "E": 1, "P": 1},
+    "Osasuna": {"G": 2, "E": 1, "P": 3},
     
-    "Sevilla": {"G": 2, "E": 0, "P": 0},
+    "Espanyol": {"G": 2, "E": 1, "P": 4},
     
-    "Osasuna": {"G": 0, "E": 1, "P": 0},
-    
-    "Espanyol": {"G": 1, "E": 0, "P": 1},
-    
-    "Deportivo": {"G": 0, "E": 2, "P": 0},
+    "Deportivo": {"G": 2, "E": 3, "P": 1},
 }
+
 
 
 # ==============================================================================
@@ -567,10 +570,8 @@ porra_goleadores = {
     "Iñaki Williams": {
         "Jugador": "Juan",
         "Equipo": "Athletic Club",
-        "Goles": 0
+        "Goles": 1
     },
-
-    
 
     "Julián Álvarez": {
         "Jugador": "Joaquín",
@@ -596,7 +597,6 @@ porra_goleadores = {
         "Goles": 0
     },
 }
-
 
 # ==============================================================================
 # PUNTOS DE APUESTAS
