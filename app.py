@@ -507,13 +507,13 @@ porra_goleadores = {
     "Cucho Hernández": {
         "Jugador": "Ejkar",
         "Equipo": "Real Betis Balompie",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Lookman": {
         "Jugador": "Sierra",
         "Equipo": "Atlético de Madrid",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Isi Palazón": {
@@ -525,7 +525,7 @@ porra_goleadores = {
     "Aubameyang": {
         "Jugador": "Vecina",
         "Equipo": "Deportivo",
-        "Goles": 2
+        "Goles": 5
     },
 
     "Toni Martinez": {
@@ -537,7 +537,7 @@ porra_goleadores = {
     "Budimir": {
         "Jugador": "Mírete",
         "Equipo": "Osasuna",
-        "Goles": 0
+        "Goles": 4
     },
 
     "Ayoze": {
@@ -555,7 +555,7 @@ porra_goleadores = {
     "Sancet": {
         "Jugador": "Miguel Ángel",
         "Equipo": "Athletic Club",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Mikel Oyarzabal": {
@@ -567,7 +567,7 @@ porra_goleadores = {
     "Iñaki Williams": {
         "Jugador": "Juan",
         "Equipo": "Athletic Club",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Julián Álvarez": {
