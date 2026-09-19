@@ -456,9 +456,6 @@ asig_equipos = {
 # ESTADÍSTICAS DE LOS EQUIPOS, ganados, empatados, perdidos
 # ==============================================================================
 
-Aquí tienes el diccionario `stats_equipos` actualizado con los datos reales de victorias (**G**), empates (**E**) y derrotas (**P**) correspondientes a los equipos indicados de la temporada actual de La Liga:
-
-
 stats_equipos = {
     "Athletic Club": {"G": 2, "E": 1, "P": 2},
     
