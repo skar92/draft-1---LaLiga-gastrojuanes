@@ -543,7 +543,7 @@ porra_goleadores = {
     "Ayoze": {
         "Jugador": "Mírete",
         "Equipo": "Villarreal",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Mikautadze": {
