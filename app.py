@@ -507,7 +507,7 @@ porra_goleadores = {
     "Cucho Hernández": {
         "Jugador": "Ejkar",
         "Equipo": "Real Betis Balompie",
-        "Goles": 1
+        "Goles": 2
     },
 
     "Lookman": {
