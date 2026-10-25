@@ -497,7 +497,7 @@ porra_goleadores = {
     "Borja Iglesias": {
         "Jugador": "Ejkar",
         "Equipo": "Celta",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Cucho Hernández": {
@@ -515,7 +515,7 @@ porra_goleadores = {
     "Isi Palazón": {
         "Jugador": "Sierra",
         "Equipo": "Rayo Vallecano",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Aubameyang": {
@@ -527,7 +527,7 @@ porra_goleadores = {
     "Toni Martinez": {
         "Jugador": "Vecina",
         "Equipo": "Alavés",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Budimir": {
@@ -539,7 +539,7 @@ porra_goleadores = {
     "Ayoze": {
         "Jugador": "Mírete",
         "Equipo": "Villarreal",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Mikautadze": {
@@ -551,7 +551,7 @@ porra_goleadores = {
     "Sancet": {
         "Jugador": "Miguel Ángel",
         "Equipo": "Athletic Club",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Mikel Oyarzabal": {
@@ -563,34 +563,33 @@ porra_goleadores = {
     "Iñaki Williams": {
         "Jugador": "Juan",
         "Equipo": "Athletic Club",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Julián Álvarez": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Sørloth": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Enes Unal": {
         "Jugador": "Telenti",
         "Equipo": "Getafe",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Hugo Duro": {
         "Jugador": "Telenti",
         "Equipo": "Valencia",
-        "Goles": 0
+        "Goles": 1
     },
 }
-
 # ==============================================================================
 # PUNTOS DE APUESTAS
 # ==============================================================================
