@@ -497,7 +497,7 @@ porra_goleadores = {
     "Borja Iglesias": {
         "Jugador": "Ejkar",
         "Equipo": "Celta",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Cucho Hernández": {
@@ -509,13 +509,13 @@ porra_goleadores = {
     "Lookman": {
         "Jugador": "Sierra",
         "Equipo": "Atlético de Madrid",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Isi Palazón": {
         "Jugador": "Sierra",
         "Equipo": "Rayo Vallecano",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Aubameyang": {
@@ -527,7 +527,7 @@ porra_goleadores = {
     "Toni Martinez": {
         "Jugador": "Vecina",
         "Equipo": "Alavés",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Budimir": {
@@ -563,7 +563,7 @@ porra_goleadores = {
     "Iñaki Williams": {
         "Jugador": "Juan",
         "Equipo": "Athletic Club",
-        "Goles": 1
+        "Goles": 2
     },
 
     "Julián Álvarez": {
@@ -575,7 +575,7 @@ porra_goleadores = {
     "Sørloth": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Enes Unal": {
@@ -587,7 +587,7 @@ porra_goleadores = {
     "Hugo Duro": {
         "Jugador": "Telenti",
         "Equipo": "Valencia",
-        "Goles": 1
+        "Goles": 0
     },
 }
 # ==============================================================================
