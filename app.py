@@ -509,7 +509,7 @@ porra_goleadores = {
     "Lookman": {
         "Jugador": "Sierra",
         "Equipo": "Atlético de Madrid",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Isi Palazón": {
@@ -539,7 +539,7 @@ porra_goleadores = {
     "Ayoze": {
         "Jugador": "Mírete",
         "Equipo": "Villarreal",
-        "Goles": 5
+        "Goles": 0
     },
 
     "Mikautadze": {
@@ -551,7 +551,7 @@ porra_goleadores = {
     "Sancet": {
         "Jugador": "Miguel Ángel",
         "Equipo": "Athletic Club",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Mikel Oyarzabal": {
@@ -569,7 +569,7 @@ porra_goleadores = {
     "Julián Álvarez": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Sørloth": {
@@ -581,7 +581,7 @@ porra_goleadores = {
     "Enes Unal": {
         "Jugador": "Telenti",
         "Equipo": "Getafe",
-        "Goles": 1
+        "Goles": 0
     },
 
     "Hugo Duro": {
