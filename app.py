@@ -455,47 +455,32 @@ asig_equipos = {
 # ==============================================================================
 # ESTADÍSTICAS DE LOS EQUIPOS, ganados, empatados, perdidos
 # ==============================================================================
-
 stats_equipos = {
-    "Athletic Club": {"G": 2, "E": 2, "P": 2},
-    
-    "Elche": {"G": 1, "E": 2, "P": 4},
-    
-    "Real Betis Balompie": {"G": 5, "E": 1, "P": 1},
-    
-    "Malaga": {"G": 0, "E": 3, "P": 4},
-
-    "Real Sociedad": {"G": 3, "E": 1, "P": 3},
-    
-    "Racing": {"G": 2, "E": 1, "P": 4},
-    
-    "Celta": {"G": 1, "E": 4, "P": 2},
-
-    "Levante": {"G": 1, "E": 2, "P": 3},
-    
-    "Valencia": {"G": 1, "E": 1, "P": 5},
-    
-    "Alavés": {"G": 3, "E": 2, "P": 2},
-    
-    "Getafe": {"G": 2, "E": 2, "P": 3},
-    
-    "Rayo Vallecano": {"G": 2, "E": 2, "P": 3},
-    
-    "Sevilla": {"G": 4, "E": 1, "P": 2},
-    
-    "Osasuna": {"G": 2, "E": 2, "P": 3},
-    
-    "Espanyol": {"G": 2, "E": 1, "P": 4},
-    
-    "Deportivo": {"G": 2, "E": 4, "P": 1},
+    "Barcelona": {"G": 9, "E": 0, "P": 0},  #[cite: 1]
+    "Atlético": {"G": 8, "E": 1, "P": 1},  #[cite: 1]
+    "Real Madrid": {"G": 7, "E": 0, "P": 2},  #[cite: 1]
+    "Betis": {"G": 6, "E": 1, "P": 2},  #[cite: 1]
+    "R. Sociedad": {"G": 5, "E": 1, "P": 3},  #[cite: 1]
+    "Sevilla": {"G": 4, "E": 2, "P": 3},  #[cite: 1]
+    "Alavés": {"G": 3, "E": 3, "P": 4},  #[cite: 1]
+    "Villarreal": {"G": 3, "E": 3, "P": 4},  #[cite: 1]
+    "Athletic": {"G": 3, "E": 3, "P": 3},  #[cite: 1]
+    "Celta": {"G": 2, "E": 5, "P": 2},  #[cite: 1]
+    "Deportivo": {"G": 2, "E": 5, "P": 3},  #[cite: 1]
+    "Osasuna": {"G": 3, "E": 2, "P": 4},  #[cite: 1]
+    "Racing": {"G": 3, "E": 2, "P": 5},  #[cite: 1]
+    "Levante": {"G": 2, "E": 4, "P": 3},  #[cite: 1]
+    "Elche": {"G": 2, "E": 4, "P": 4},  #[cite: 1]
+    "Getafe": {"G": 2, "E": 3, "P": 5},  #[cite: 1]
+    "Rayo": {"G": 2, "E": 3, "P": 4},  #[cite: 1]
+    "Espanyol": {"G": 2, "E": 2, "P": 6},  #[cite: 1]
+    "Valencia": {"G": 1, "E": 3, "P": 6},  #[cite: 1]
+    "Málaga": {"G": 0, "E": 5, "P": 5},  #[cite: 1]
 }
-
-
 
 # ==============================================================================
 # PORRA DE GOLEADORES, goals
 # ==============================================================================
-
 porra_goleadores = {
 
     "Borja Iglesias": {
@@ -513,7 +498,7 @@ porra_goleadores = {
     "Lookman": {
         "Jugador": "Sierra",
         "Equipo": "Atlético de Madrid",
-        "Goles": 1
+        "Goles": 1  #
     },
 
     "Isi Palazón": {
@@ -525,7 +510,7 @@ porra_goleadores = {
     "Aubameyang": {
         "Jugador": "Vecina",
         "Equipo": "Deportivo",
-        "Goles": 5
+        "Goles": 5  #
     },
 
     "Toni Martinez": {
@@ -573,7 +558,7 @@ porra_goleadores = {
     "Julián Álvarez": {
         "Jugador": "Joaquín",
         "Equipo": "Atlético de Madrid",
-        "Goles": 0
+        "Goles": 1
     },
 
     "Sørloth": {
